@@ -261,7 +261,7 @@ async function loadBrowserAI() {
   }
 }
 // =================================================================== world setup
-const LEFT = 160, W = 656, H = 656, S = 4;     // the map shows x from LEFT to LEFT + W: the building and its front yard
+const LEFT = -72, W = 1120, H = 656, S = 4;     // the map shows x from LEFT to LEFT + W: the building and its front yard
 const OFFY = 0;                                // (no extra strip any more: everything fits inside the building)
 const TOP = -OFFY, HT = H + OFFY;                 // world size in tiles-pixels, world -> image scale
 const view = document.getElementById('view');
@@ -291,31 +291,35 @@ const ROOMS = {
   eng:     { x: 176, y: 16,  w: 152, h: 128, door: 252, side: 'n', name: 'MINISTRY OF PEACE',    dept: 'Ministry of Peace', color: '#3d5872', wall: '#384a5c', floor: ['#4a5560', '#46515b'] },
   woff:    { x: 336, y: 16,  w: 44,  h: 128, door: 520, side: 'w', name: "WINSTON'S OFFICE",                           wall: '#3b2b26', floor: ['#4f3a2c', '#4a3628'] },
   ceo:     { x: 384, y: 16,  w: 272, h: 128, door: 520, side: 'n', name: "BIG BROTHER'S OFFICE",                       wall: '#4a2f2a', floor: ['#5a3a2a', '#553627'] },
-  board:   { x: 664, y: 16,  w: 136, h: 128, door: 732, side: 'n', name: 'INTERROGATION',                              wall: '#2a2c30', floor: ['#3a3d42', '#36393e'] },
+  board:   { x: 664, y: 16,  w: 232, h: 128, door: 780, side: 'n', name: 'INTERROGATION',                              wall: '#2a2c30', floor: ['#3a3d42', '#36393e'] },
   acad:    { x: 176, y: 192, w: 152, h: 112, door: 248, side: 'L', name: 'MINISTRY OF TRUTH',    dept: 'Ministry of Truth', color: '#57456e', wall: '#4d3d5e', floor: ['#6b5340', '#654e3c'] },
   biz:     { x: 176, y: 312, w: 152, h: 112, door: 368, side: 'L', name: 'MINISTRY OF PLENTY',   dept: 'Ministry of Plenty', color: '#3f5e45', wall: '#3c5240', floor: ['#4f5a50', '#4b564c'] },
   hall:    { x: 376, y: 192, w: 240, h: 232, door: 496, side: 'm', name: 'THE ASSEMBLY ROOM',                          wall: '#2a1414', floor: ['#3a3532', '#35302d'] },
-  mlove:   { x: 664, y: 192, w: 136, h: 112, door: 248, side: 'R', name: 'MINISTRY OF LOVE',                           wall: '#1d1416', floor: ['#2e2a2c', '#2a2628'] },
-  r101:    { x: 664, y: 312, w: 136, h: 112, door: 368, side: 'R', name: 'ROOM 101',                                   wall: '#3a1a18', floor: ['#3b3331', '#362f2d'] },
+  mlove:   { x: 664, y: 192, w: 232, h: 112, door: 248, side: 'R', name: 'MINISTRY OF LOVE',                           wall: '#1d1416', floor: ['#2e2a2c', '#2a2628'] },
+  r101:    { x: 664, y: 312, w: 232, h: 112, door: 368, side: 'R', name: 'ROOM 101',                                   wall: '#3a1a18', floor: ['#3b3331', '#362f2d'] },
   crea:    { x: 176, y: 472, w: 152, h: 112, door: 252, side: 'B', name: 'MINISTRY OF FICTION',  dept: 'Ministry of Fiction', color: '#6e5038', wall: '#5e4632', floor: ['#8a7a64', '#84745e'] },
   canteen: { x: 336, y: 472, w: 200, h: 112, door: 400, side: 'B', name: 'CANTEEN',                                    wall: '#6d6b62', floor: ['#8c8a80', '#848278'] },
   lobby:   { x: 544, y: 472, w: 112, h: 112, door: 600, side: 'B', name: 'LOBBY',                                      wall: '#d6d0c2', floor: ['#bdb8ad', '#b3aea3'] },
-  surv:    { x: 664, y: 472, w: 136, h: 112, door: 708, side: 'B', name: 'SURVEILLANCE',                               wall: '#2c3036', floor: ['#3e4247', '#3a3e43'] },
-  yard:    { x: 168, y: 592, w: 640, h: 64,  door: 600, side: 'y', name: 'YARD' },
+  surv:    { x: 664, y: 472, w: 232, h: 112, door: 780, side: 'B', name: 'SURVEILLANCE',                               wall: '#2c3036', floor: ['#3e4247', '#3a3e43'] },
+  records: { x: -56, y: 16,  w: 224, h: 568, door: 168, side: 'E', name: 'RECORDS DEPARTMENT',                         wall: '#3a3f3a', floor: ['#4d4f4a', '#494b46'] },
+  cells:   { x: 904, y: 192, w: 128, h: 232, door: 248, side: 'X', name: 'CELLS',                                      wall: '#d8d8d2', floor: ['#c9c9c2', '#c2c2bb'] },
+  wc:      { x: 904, y: 16,  w: 128, h: 128, door: 968, side: 'n', name: 'TOILETS',                                    wall: '#b9c4c2', floor: ['#d6dcd9', '#cfd5d2'] },
+  closet:  { x: 904, y: 472, w: 128, h: 112, door: 968, side: 'B', name: 'JANITOR',                                    wall: '#4a4436', floor: ['#5a5446', '#554f42'] },
+  yard:    { x: -64, y: 592, w: 1104, h: 64, door: 600, side: 'y', name: 'YARD' },
   corridor:{ x: 176, y: 152, w: 624, h: 32,  door: 520, side: 'c', name: 'CORRIDOR' },
 };
 // the corridor ring: walkers follow these lanes
-const LANE = { top: 180, bottom: 460, left: 352, right: 640, x0: 184, x1: 792 };
+const LANE = { top: 180, bottom: 460, left: 352, right: 640, x0: 184, x1: 1016 };
 const CORRIDOR_Y = LANE.top;
 // Most rooms were first drawn somewhere else on an older map; SHIFT moves their contents into place.
-const SHIFT = { eng: [160, 0], woff: [160, 0], ceo: [236, 0], board: [312, 0], acad: [-308, 176], biz: [176, 120], crea: [32, 280],
-                canteen: [-8, 280], surv: [212, 280], r101: [136, 120], mlove: [312, 248], hall: [0, 0], lobby: [0, 0], yard: [0, 0], corridor: [0, 0] };
+const SHIFT = { eng: [160, 0], woff: [160, 0], ceo: [236, 0], board: [360, 0], acad: [-308, 176], biz: [176, 120], crea: [32, 280],
+                canteen: [-8, 280], surv: [260, 280], r101: [184, 120], mlove: [360, 248], hall: [0, 0], records: [0, 0], cells: [0, 0], wc: [0, 0], closet: [0, 0], lobby: [0, 0], yard: [0, 0], corridor: [0, 0] };
 const sx = (room, x) => x + (SHIFT[room] || [0, 0])[0], sy = (room, y) => y + (SHIFT[room] || [0, 0])[1];
 const MEMORY_HOLES = Object.fromEntries(Object.entries({ eng: [144, 19], acad: [562, 19], biz: [120, 194], crea: [180, 194], woff: [178, 19], board: [400, 19] })
   .map(([k, [x, y]]) => [k, [sx(k, x), sy(k, y)]]));
 const WOFF_VIA = [[408, 102], [382, 102], [364, 102]];   // through the internal door from your office
 const woffInner = p => p.y < 58 ? [[374, 64], [374, 34]] : [];   // round the side of Winston's desk
-const DEPT_ROOM = { 'Ministry of Peace': 'eng', 'Ministry of Truth': 'acad', 'Ministry of Plenty': 'biz', 'Ministry of Fiction': 'crea', Surveillance: 'surv' };
+const DEPT_ROOM = { 'Ministry of Peace': 'eng', 'Ministry of Truth': 'acad', 'Ministry of Plenty': 'biz', 'Ministry of Fiction': 'crea', Surveillance: 'surv', 'Records Department': 'records', Janitor: 'closet' };
 
 const SPOTS = [];
 // spots are written in each room's old coordinates and shifted into place (abs = true for new, absolute positions)
@@ -344,17 +348,17 @@ deskSpot('acad', 'acad-d0', 530, 62); deskSpot('acad', 'acad-d1', 588, 62);
 deskSpot('biz', 'biz-d0', 40, 250); deskSpot('biz', 'biz-d1', 108, 250);
 deskSpot('crea', 'crea-d0', 172, 250); deskSpot('crea', 'crea-d1', 264, 250);
 // relaxing spots
-spot('eng', 'eng-i1', 40, 132, 'stand', 'idle'); spot('eng', 'eng-i2', 136, 136, 'back', 'idle');
+spot('eng', 'eng-i1', 84, 104, 'stand', 'idle'); spot('eng', 'eng-i2', 136, 136, 'back', 'idle');
 spot('acad', 'acad-i1', 584, 122, 'stand', 'idle'); spot('acad', 'acad-i2', 616, 124, 'back', 'idle');
-spot('biz', 'biz-i1', 30, 296, 'stand', 'idle'); spot('biz', 'biz-i2', 128, 300, 'stand', 'idle');
-spot('crea', 'crea-i1', 204, 296, 'back', 'idle'); spot('crea', 'crea-i2', 248, 296, 'back', 'idle');
+spot('biz', 'biz-i1', 100, 286, 'stand', 'idle'); spot('biz', 'biz-i2', 128, 300, 'stand', 'idle');
+spot('crea', 'crea-i1', 262, 298, 'back', 'idle'); spot('crea', 'crea-i2', 284, 298, 'back', 'idle');
 for (const x of [366, 386, 426, 446, 486, 506]) spot('canteen', 'can-t' + x, x, 255, 'sit', 'idle');
 for (const x of [376, 436, 496]) spot('canteen', 'can-b' + x, x, 276, 'sitback', 'idle');
 spot('canteen', 'urn', 366, 226, 'back', 'idle'); spot('canteen', 'vend', 459, 232, 'back', 'idle');
 spot('surv', 'watch0', 508, 238, 'sitback', 'watch'); spot('surv', 'watch1', 538, 238, 'sitback', 'watch');
 spot('surv', 'surv-i', 520, 292, 'stand', 'idle');
 // the yard: benches and standing room on the forecourt
-for (const [x, y, p] of [[448, 620, 'sit'], [464, 620, 'sit'], [736, 620, 'sit'], [752, 620, 'sit'], [380, 632, 'stand'], [520, 636, 'stand'], [672, 634, 'stand'], [800, 630, 'stand']])
+for (const [x, y, p] of [[448, 620, 'sit'], [464, 620, 'sit'], [736, 620, 'sit'], [752, 620, 'sit'], [48, 620, 'sit'], [64, 620, 'sit'], [920, 620, 'sit'], [936, 620, 'sit'], [380, 632, 'stand'], [520, 636, 'stand'], [672, 634, 'stand'], [840, 630, 'stand']])
   spot('yard', 'yard' + x + '-' + y, x, y, p, 'idle', true);
 // Room 101
 spot('r101', 'r101', 594, 262, 'type', 'r101');
@@ -365,6 +369,20 @@ const HALL_SEATS = [];
 for (let row = 0; row < 5; row++) for (const x of [412, 436, 460, 532, 556, 580]) { const k = `hall-${row}-${x}`; spot('hall', k, x, 276 + row * 26, 'sitback', 'meeting', true); HALL_SEATS.push(k); }
 spot('hall', 'hall-head', 496, 240, 'stand', 'you', true);
 
+// the Records Department: two columns of cubicles either side of an aisle, and the filing counter at the top
+const REC_DESKS = [];
+for (let row = 0; row < 8; row++) for (const x of [0, 112]) { const k = `rec-d${row}-${x}`; deskSpot('records', k, x, 104 + row * 60); REC_DESKS.push(k); }
+spot('records', 'records-file', 56, 64, 'back', 'winston');
+spot('records', 'rec-i1', 56, 560, 'stand', 'idle');
+// the Holding Cells: six cells either side of a central passage, a guard's desk by the entrance
+// the cells: reached only through the Ministry of Love. Three cells off a narrow passage.
+const CELLS = [];
+for (let row = 0; row < 3; row++) { const k = `cell-${row}`; spot('cells', k, 1000, 192 + row * 80 + 50, 'sit', 'cell'); CELLS.push(k); }
+// the toilets (anyone may go) and the janitor's closet
+for (const [k, x] of [['wc-1', 924], ['wc-2', 956], ['wc-3', 988]]) spot('wc', k, x, 46, 'back', 'loo');
+spot('wc', 'wc-sink', 1012, 110, 'back', 'loo');
+DESKS.janitor = { room: 'closet', x: 940, y: 540, ox: 940, oy: 540 }; spot('closet', 'janitor', 940, 540, 'sit', 'desk');
+spot('closet', 'closet-i', 990, 548, 'stand', 'idle');
 const spotByKey = Object.fromEntries(SPOTS.map(s => [s.key, s]));
 const taken = {};
 
@@ -453,26 +471,26 @@ const WB = (x, y, w, h) => { px(x, y, w, h, '#8d9196'); px(x, y, w, 1, '#b3b7bc'
 function wallH(x0, x1, y, gaps = []) { let x = x0; for (const [a, b] of gaps) { if (a > x) WB(x, y, a - x, 8); x = b; } if (x1 > x) WB(x, y, x1 - x, 8); }
 function wallV(x, y0, y1, gaps = []) { let y = y0; for (const [a, b] of gaps) { if (a > y) WB(x, y, 8, a - y); y = b; } if (y1 > y) WB(x, y, 8, y1 - y); }
 function bench(bx, by) { px(bx, by, 32, 4, '#6b4a2f'); px(bx, by, 32, 1, '#86603e'); px(bx + 2, by + 4, 2, 3, '#3a2a1c'); px(bx + 28, by + 4, 2, 3, '#3a2a1c'); }
-const LAMPS = [[548, 618], [652, 618], [240, 640], [760, 640]];
-const BENCHES = [[440, 622], [728, 622]];
+const LAMPS = [[548, 618], [652, 618], [240, 640], [760, 640], [-24, 640], [1000, 640]];
+const BENCHES = [[440, 622], [728, 622], [40, 622], [912, 622]];
 
 function drawStatic() {
   G = bgG;
   // ---------------- outside: just the concrete forecourt at the front
   tiles(LEFT, 0, W, H, '#6f7172', '#6b6d6e', 12);
-  tiles(168, 592, 640, 64, '#77797a', '#717374', 12);
+  tiles(-64, 592, 1104, 64, '#77797a', '#717374', 12);
   px(590, 592, 20, 64, '#8a8b8b'); for (let y = 592; y < 656; y += 6) px(590, y, 20, 1, '#7c7d7d');   // the path from the front doors
   for (let x = LEFT; x < LEFT + W; x += 6) px(x, 650, 1, 6, '#3a3d40'); px(LEFT, 650, W, 1, '#54575a');   // the perimeter fence
   for (let x = LEFT; x < LEFT + W; x += 3) px(x, 648.5, 1.5, 1, '#8d9196');                           // and its barbed wire
   for (const [bx, by] of BENCHES) bench(bx, by);
   for (const [lx, ly] of LAMPS) { px(lx, ly - 22, 2, 22, '#2f3236'); px(lx - 2, ly - 24, 6, 3, '#2f3236'); }
   px(570, 600, 2, 18, '#2f3236');                                           // pole for the yard telescreen
-  poster(300, 596, 'CURFEW', 'AT 23:00'); poster(700, 596, 'REPORT', 'NEIGHBOURS');
+  poster(300, 596, 'CURFEW', 'AT 23:00'); poster(700, 596, 'REPORT', 'NEIGHBOURS'); poster(120, 596, 'NO', 'LOITERING'); poster(860, 596, 'WE ARE', 'WATCHING');
   // ---------------- floors
-  px(168, 8, 640, 584, '#3c3f43');
+  px(-64, 8, 1104, 584, '#3c3f43');
   for (const r of Object.values(ROOMS)) if (r.floor) tiles(r.x, r.y, r.w, r.h, r.floor[0], r.floor[1], 8);
-  for (const [x, y, w, h] of [[176, 152, 624, 32], [176, 432, 624, 32], [336, 184, 32, 248], [624, 184, 32, 248]]) tiles(x, y, w, h, '#5d6266', '#585d61', 8);
-  for (const [x, y, w, h] of [[176, 178, 624, 4], [176, 458, 624, 4], [350, 182, 4, 278], [638, 182, 4, 278]]) { px(x, y, w, h, '#6e3a35'); px(x, y, w, 1, '#8a4a43'); }   // red runners
+  for (const [x, y, w, h] of [[176, 152, 856, 32], [176, 432, 856, 32], [336, 184, 32, 248], [624, 184, 32, 248]]) tiles(x, y, w, h, '#5d6266', '#585d61', 8);
+  for (const [x, y, w, h] of [[176, 178, 856, 4], [176, 458, 856, 4], [350, 182, 4, 278], [638, 182, 4, 278]]) { px(x, y, w, h, '#6e3a35'); px(x, y, w, 1, '#8a4a43'); }   // red runners
   // department floor colour strips by the door
   for (const r of Object.values(ROOMS)) if (r.dept) {
     if (r.side === 'n') px(r.x, r.y + r.h - 3, r.w, 3, r.color);
@@ -493,21 +511,24 @@ function drawStatic() {
     px(x0, y + 12, x1 - x0, 2, '#2c3132');
     for (const d of doors) { px(d - 8, y, 16, 14, '#2a2d30'); px(d - 8, y + 13, 16, 1, '#5d6266'); }
   };
-  face(176, 800, 152, [ROOMS.eng.door, ROOMS.ceo.door, ROOMS.board.door]);
-  face(176, 336, 432, []); face(368, 624, 432, [ROOMS.hall.door]); face(656, 800, 432, []);
+  face(176, 1032, 152, [ROOMS.eng.door, ROOMS.ceo.door, ROOMS.board.door, ROOMS.wc.door]);
+  face(176, 336, 432, []); face(368, 624, 432, [ROOMS.hall.door]); face(656, 1032, 432, []);
 
   // ---------------- wall blocks (tops)
-  WB(168, 8, 640, 8); WB(168, 8, 8, 584); WB(800, 8, 8, 584);
-  wallH(168, 808, 584, [[592, 608]]);                                         // outer bottom wall with the glass front doors
+  WB(-64, 8, 1104, 8); WB(-64, 8, 8, 584); WB(1032, 8, 8, 584);
+  wallV(168, 8, 592, [[160, 176]]); px(168, 160, 8, 16, '#2a2d30');              // the Records Department's door
+  WB(896, 8, 8, 144); WB(896, 464, 8, 128); wallV(896, 184, 432, [[240, 256]]);   // the east rooms; the cells open off the Ministry of Love
+  px(896, 240, 8, 16, '#3a3d42'); for (const ry of [243, 252]) px(898, ry, 4, 1, '#8d9196');
+  wallH(-64, 1040, 584, [[592, 608]]);                                         // outer bottom wall with the glass front doors
   px(592, 584, 16, 8, '#9fc4c9'); px(599, 584, 2, 8, '#5d7d82');
   WB(328, 8, 8, 144); WB(656, 8, 8, 144);                                     // north wing
   WB(380, 16, 4, 78); WB(380, 110, 4, 34);                                    // Winston's partition, with a doorway
-  wallH(168, 808, 144, [ROOMS.eng, ROOMS.ceo, ROOMS.board].map(r => [r.door - 8, r.door + 8]));
-  wallH(168, 808, 184, [[336, 368], [624, 656]]);                             // the ring's inner and outer walls
-  wallH(168, 808, 424, [[336, 368], [488, 504], [624, 656]]);
+  wallH(168, 1040, 144, [ROOMS.eng, ROOMS.ceo, ROOMS.board, ROOMS.wc].map(r => [r.door - 8, r.door + 8]));
+  wallH(168, 1040, 184, [[336, 368], [624, 656]]);                             // the ring's inner and outer walls
+  wallH(168, 1040, 424, [[336, 368], [488, 504], [624, 656]]);
   wallV(328, 184, 432, [[240, 256], [360, 376]]); wallV(368, 184, 432); wallV(616, 184, 432); wallV(656, 184, 432, [[240, 256], [360, 376]]);
-  WB(168, 304, 168, 8); WB(656, 304, 152, 8);
-  wallH(168, 808, 464, [[244, 260], [392, 408], [544, 656], [700, 716]]);     // south wing (the lobby is open)
+  WB(168, 304, 168, 8); WB(656, 304, 248, 8);
+  wallH(168, 1040, 464, [[244, 260], [392, 408], [544, 656], [772, 788], [960, 976]]);     // south wing (the lobby is open)
   WB(328, 464, 8, 128); WB(536, 464, 8, 128); WB(656, 464, 8, 128);
   // side doors: dark gaps in the walls
   for (const r of [ROOMS.acad, ROOMS.biz]) { px(328, r.door - 8, 8, 16, '#2a2d30'); px(334, r.door - 8, 2, 16, '#5d6266'); }
@@ -609,7 +630,7 @@ function drawStatic() {
     chairTop(594, 265, '#3a1a18');
     px(613, 252, 6, 12, '#3a3d42'); px(611, 263, 10, 2, '#2a2c30');                       // the cage stand
   });
-  text('101', 732, 310.6, 15, '#e6e2d8', 'center');
+  text('101', 780, 310.6, 15, '#e6e2d8', 'center');
   // ---------------- memory holes (where rejected drafts go)
   for (const [x, y] of Object.values(MEMORY_HOLES)) {
     px(x, y, 8, 6, '#3a3d42'); px(x + 1, y + 1, 6, 4, '#0b0c0d'); px(x + 1, y + 2, 6, 1, '#1b1d21');
@@ -640,6 +661,50 @@ function drawStatic() {
   for (const k of HALL_SEATS) { const sp = spotByKey[k]; chairTop(sp.x, sp.y + 3, '#5a4038'); }
   // ---------------- the extra desks for the clerks
   for (const k of ['eng-d3', 'eng-d4', 'acad-d2', 'acad-d3', 'biz-d2', 'biz-d3']) at(DESKS[k].room, () => { const d = od(k); desk(d.x - 16, d.y - 28, 32, 14, '#7b7e83'); chairTop(d.x, d.y + 3); px(d.x + 9, d.y - 25, 5, 4, '#d9d2bf'); });
+  // ---------------- the Records Department
+  poster(-40, 17, 'THE PAST', 'IS WHAT WE SAY'); poster(126, 17, 'FILE IT.', 'FORGET IT.');
+  px(-8, 17, 52, 10, '#1d1f22'); text('RECORDS', 18, 23.6, 13, '#e3b341', 'center');
+  px(-52, 30, 216, 3, '#7b7f84'); px(-52, 30, 216, 1, '#9aa0a6');                                     // the pneumatic tube along the wall
+  for (let i = 0; i < 8; i++) px(-48 + i * 28, 33, 2, 6, '#7b7f84');
+  desk(-40, 44, 192, 10, '#5d6168'); px(-40, 44, 192, 1, '#7b7f84');                                // the filing counter
+  for (let i = 0; i < 14; i++) px(-36 + i * 13.5, 46, 9, 5, i % 3 ? '#d9d2bf' : '#c9c4b0');          // trays of paper
+  px(52, 44, 8, 10, '#1b1d21'); text('IN', 56, 51.5, 7, '#e3b341', 'center');                       // the in-chute
+  for (const k of REC_DESKS) {
+    const d = DESKS[k];
+    px(d.x - 22, d.y - 34, 44, 2, '#5f6368'); px(d.x - 22, d.y - 34, 2, 44, '#5f6368'); px(d.x + 20, d.y - 34, 2, 44, '#5f6368');   // cubicle partitions
+    desk(d.x - 16, d.y - 28, 32, 14, '#7b7e83'); chairTop(d.x, d.y + 3);
+    px(d.x + 9, d.y - 25, 5, 4, '#d9d2bf');
+    px(d.x - 20, d.y - 31, 4, 3, '#0b0c0d'); px(d.x - 20, d.y - 32, 4, 1, '#3a3d42');                 // each cubicle's own memory hole
+    px(d.x + 16, d.y - 33, 3, 6, '#7b7f84');                                                         // and its tube
+  }
+  px(48, 64, 16, 512, '#5a5550'); px(48, 64, 1, 512, '#6e6862'); px(63, 64, 1, 512, '#6e6862');     // the aisle runner
+  // ---------------- the cells, off the Ministry of Love: a passage on the left, three cells behind bars
+  px(904, 192, 20, 232, '#b3b3ac');
+  for (let row = 0; row < 3; row++) {
+    const y0 = 192 + row * 80;
+    if (row) { px(924, y0 - 4, 108, 6, '#9a9a94'); px(924, y0 - 4, 108, 1, '#c9c9c2'); }               // wall between cells
+    px(986, y0 + 42, 40, 8, '#8a8a84'); px(986, y0 + 42, 40, 1, '#a8a8a0');                           // the bench
+    px(1020, y0 + 14, 8, 7, '#7b7f84'); px(1021, y0 + 15, 6, 4, '#5d6168');                          // a steel pan
+    for (let i = 0; i < 9; i++) px(924, y0 + 4 + i * 8, 2, 5, '#3a3d42');                            // bars onto the passage
+    px(968, y0 + (row ? 3 : 13), 10, 2, '#fffbe0');                                                    // the light that never goes off
+  }
+  // ---------------- the toilets: three stalls and a row of sinks
+  for (let i = 0; i < 3; i++) {
+    const x0 = 908 + i * 32;
+    px(x0, 28, 2, 36, '#8d9a98'); px(x0 + 30, 28, 2, 36, '#8d9a98');                                 // stall walls
+    px(x0 + 10, 30, 12, 8, '#f4f6f5'); px(x0 + 12, 32, 8, 5, '#d6dcd9'); px(x0 + 13, 28, 6, 3, '#e8ecea');   // pan and cistern
+    px(x0 + 2, 62, 28, 2, '#6e7c7a');                                                                 // stall door
+  }
+  for (let i = 0; i < 3; i++) { px(1008, 80 + i * 16, 18, 8, '#e8ecea'); px(1012, 82 + i * 16, 10, 4, '#b9c4c2'); px(1016, 79 + i * 16, 2, 2, '#9a9a94'); }   // sinks
+  px(1028, 78, 2, 46, '#9fb4b8');                                                                     // mirror strip
+  px(912, 100, 14, 22, '#8d9a98'); text('SOAP', 919, 112, 7, '#2a2c30', 'center');                   // (empty) soap dispenser
+  // ---------------- the janitor's closet
+  for (let i = 0; i < 3; i++) { px(912 + i * 4, 486, 1.5, 26, '#8a6a4a'); px(910 + i * 4, 510, 6, 4, '#c9b27a'); }   // mops and brooms
+  px(930, 514, 14, 10, '#6b6f74'); px(931, 515, 12, 4, '#3d5872');                                   // bucket
+  px(990, 488, 34, 6, '#6b4a2f'); px(990, 500, 34, 6, '#6b4a2f');                                     // shelves of tins and rags
+  for (let i = 0; i < 6; i++) { px(992 + i * 5.5, 484, 4, 4, ['#9a9a94', '#c23b30', '#d9d2bf'][i % 3]); px(992 + i * 5.5, 496, 4, 4, ['#d9d2bf', '#9a9a94', '#3d5872'][i % 3]); }
+  px(1004, 530, 18, 10, '#d9d2bf'); px(1006, 532, 14, 6, '#b3b7bc');                                  // a deep sink
+  chairTop(940, 543, '#5a4a36');                                                                     // her stool
   // ---------------- room labels
   for (const r of Object.values(ROOMS)) {
     if (r === ROOMS.yard || r === ROOMS.lobby || r === ROOMS.corridor) continue;
@@ -651,9 +716,9 @@ function drawStatic() {
     text(r.name, r.x + 6, ly + 5.3, size, '#d9d4c7');
   }
   // corridor decoration (kept clear of all doors)
-  poster(282, 153, 'THE EYE', 'SEES ALL'); poster(400, 153, 'THINK', 'CORRECTLY'); poster(650, 153, 'OUTPUT IS', 'FREEDOM'); poster(760, 153, 'REPORT', 'DOUBT');
+  poster(282, 153, 'THE EYE', 'SEES ALL'); poster(400, 153, 'THINK', 'CORRECTLY'); poster(650, 153, 'OUTPUT IS', 'FREEDOM'); poster(830, 153, 'REPORT', 'DOUBT'); poster(900, 153, 'CLEAN HANDS', 'CLEAN MINDS');
   px(532, 154, 24, 6, '#1d1f22'); text('BB / W.SMITH', 544, 158.4, 10, '#e3b341', 'center');   // door plate
-  poster(220, 433, 'WORK IS', 'LOYALTY'); poster(420, 433, 'THE EYE', 'NEVER BLINKS'); poster(540, 433, 'OBEY', 'GLADLY'); poster(760, 433, 'SILENCE', 'IS SAFE');
+  poster(220, 433, 'WORK IS', 'LOYALTY'); poster(420, 433, 'THE EYE', 'NEVER BLINKS'); poster(540, 433, 'OBEY', 'GLADLY'); poster(760, 433, 'SILENCE', 'IS SAFE'); poster(920, 433, 'WASTE', 'NOTHING');
   px(482, 434, 28, 6, '#1d1f22'); text('ASSEMBLY', 496, 438.4, 9, '#e3b341', 'center');
 
   // ---------------- foreground pieces (people sit behind these)
@@ -705,6 +770,8 @@ function routeIn(room, s) {
   if (r.side === 'm') return [[r.door, 436], [r.door, 420], [r.door, s.y], [s.x, s.y]];   // up the aisle, then along the row
   if (r.side === 'L') return [[340, r.door], [318, r.door], [s.x, s.y]];
   if (r.side === 'R') return [[652, r.door], [674, r.door], [s.x, s.y]];
+  if (r.side === 'E') return [[160, r.door], [56, r.door], [56, s.y], [s.x, s.y]];                       // Records: down the aisle
+  if (r.side === 'X') return [...routeIn('mlove', { x: 880, y: 248 }), [908, 248], [916, 248], [916, s.y], [s.x, s.y]];   // the cells: through the Ministry of Love
   return [[r.door, 468], [r.door, 480], [s.x, s.y]];      // 'B': the south wing
 }
 // where a room's door meets the corridor ring
@@ -712,6 +779,8 @@ function anchor(room) {
   if (room === 'home' || room === 'yard') return [600, LANE.bottom];
   const r = ROOMS[room];
   if (r.side === 'L') return [LANE.left, r.door];
+  if (r.side === 'E') return [LANE.x0, LANE.top];
+  if (r.side === 'X') return anchor('mlove');
   if (r.side === 'R') return [LANE.right, r.door];
   if (r.side === 'n' || r.side === 'w') return [r.door, LANE.top];
   if (r.side === 'c') return [r.door, LANE.top];
@@ -743,11 +812,11 @@ function exitPoints(c, from = c.loc) {
   return routeIn(from, here).slice(0, -1).reverse();
 }
 // Where someone physically is right now (they may have been sent somewhere new halfway along a corridor).
-const CORRIDORS = [{ x: 176, y: 152, w: 624, h: 32 }, { x: 176, y: 432, w: 624, h: 32 }, { x: 336, y: 184, w: 32, h: 248 }, { x: 624, y: 184, w: 32, h: 248 }];
+const CORRIDORS = [{ x: 176, y: 152, w: 856, h: 32 }, { x: 176, y: 432, w: 856, h: 32 }, { x: 336, y: 184, w: 32, h: 248 }, { x: 624, y: 184, w: 32, h: 248 }];
 function rectDist(r, x, y) { const dx = Math.max(r.x - x, 0, x - (r.x + r.w)), dy = Math.max(r.y - y, 0, y - (r.y + r.h)); return Math.hypot(dx, dy); }
 function whereAmI(c) {
   if (c.loc === 'home' || c.hidden) return 'home';
-  if (c.x < 168 || c.x > 808 || c.y > 592) return c.y > 600 && c.x > 560 && c.x < 640 && c.loc === 'home' ? 'home' : 'yard';
+  if (c.y > 592 || c.x < -64 || c.x > 1040) return 'yard';
   let best = null, bd = Infinity;
   for (const [k, r] of Object.entries(ROOMS)) { if (k === 'yard' || k === 'corridor') continue; const d = rectDist(r, c.x, c.y); if (d < bd) { bd = d; best = k; } }
   for (const r of CORRIDORS) { const d = rectDist(r, c.x, c.y); if (d < bd || (d === 0 && bd === 0 && c.path.length)) { bd = d; best = 'corridor'; } }
@@ -809,6 +878,7 @@ function idleChoice(c) {
     if (r < .95 || c.spotKey !== seat) return ['board', seat];   // nearly always in their chairs
     return canteen() || ['board', seat];
   }
+  if (r > .9 && r < .94) { const s = pick(freeSpots(x => x.use === 'loo')); if (s) return ['wc', s.key]; }   // the odd trip to the toilets
   // staff stay in their own department, with the odd canteen break
   if (r < .85) {
     if (c.deskKey && r < .65 && (!taken[c.deskKey] || taken[c.deskKey] === c.id)) return [DESKS[c.deskKey].room, c.deskKey];
@@ -870,7 +940,7 @@ function feedLine(who, txt, color) {
 
 // =================================================================== per-frame drawing
 const [cctv, cctvG] = layer(3 * 60, 34, false);
-const FEED_ROOMS = ['mlove', 'ceo', 'board', 'eng', 'acad', 'hall', 'biz', 'crea', 'canteen', 'r101', 'yard'];
+const FEED_ROOMS = ['mlove', 'ceo', 'board', 'eng', 'records', 'acad', 'hall', 'biz', 'cells', 'crea', 'canteen', 'r101', 'wc', 'yard'];
 let lastCctv = 0, feedShift = 0;
 const puffs = [];
 function puff(room) { const h = MEMORY_HOLES[room]; if (h) { puffs.push({ x: h[0], y: h[1], t: performance.now() }); sfx('puff'); } }
@@ -917,10 +987,10 @@ function drawDynamic(now) {
   for (const x of [190, 600]) telescreen(x, 154, 24, 8, now, false);
   telescreen(700, 434, 24, 8, now, false);
   if (lastVerdict && now - lastVerdict.t < 40000) {
-    px(672, 17, 30, 10, '#151719'); px(673, 18, 28, 8, lastVerdict.ok ? '#123020' : '#300c0c');
-    text(lastVerdict.avg.toFixed(1), 687, 23.2, 15, lastVerdict.ok ? '#6cc070' : '#ff6a5a', 'center');
-    text(lastVerdict.ok ? 'CLEARED' : 'GUILTY', 687, 25.6, 7, '#e6e2d8', 'center');
-  } else telescreen(672, 17, 30, 10, now, false);
+    px(720, 17, 30, 10, '#151719'); px(721, 18, 28, 8, lastVerdict.ok ? '#123020' : '#300c0c');
+    text(lastVerdict.avg.toFixed(1), 735, 23.2, 15, lastVerdict.ok ? '#6cc070' : '#ff6a5a', 'center');
+    text(lastVerdict.ok ? 'CLEARED' : 'GUILTY', 735, 25.6, 7, '#e6e2d8', 'center');
+  } else telescreen(720, 17, 30, 10, now, false);
   telescreen(562, 594, 18, 10, now, false);                 // the yard telescreen
   // desk monitors light up when someone works there
   for (const [k, d] of Object.entries(DESKS)) {
@@ -940,15 +1010,15 @@ function drawDynamic(now) {
   px(446, 487, 10, 11, `rgba(255,${200 + Math.sin(now / 300) * 30 | 0},180,.3)`);
   const st = (now / 400) % 4; px(355, 478 - st, 1, 1, 'rgba(230,230,230,.6)'); px(357, 479 - st * .7, 1, 1, 'rgba(230,230,230,.5)');
   // surveillance screens show the rest of the building
-  for (let i = 0; i < 3; i++) { px(715 + i * 18, 474, 16, 9, '#111315'); G.drawImage(cctv, i * 60, 0, 60, 34, (716 + i * 18) * S, 475 * S, 14 * S, 7 * S); }
+  for (let i = 0; i < 3; i++) { px(763 + i * 18, 474, 16, 9, '#111315'); G.drawImage(cctv, i * 60, 0, 60, 34, (764 + i * 18) * S, 475 * S, 14 * S, 7 * S); }
   // little cameras in every room
   const led = Math.floor(now / 700) % 2 ? '#ff3b2f' : '#5a1a16';
   for (const r of Object.values(ROOMS)) if (r.wall && r !== ROOMS.lobby) { px(r.x + r.w - 7, r.y + 1, 5, 3, '#2a2c30'); px(r.x + r.w - 7, r.y + 2, 1, 1, led); }
   // the interrogation lamp
   const flick = .9 + Math.sin(now / 90) * .03 - (Math.random() < .01 ? .3 : 0);
   G.fillStyle = `rgba(255,235,170,${.13 * flick})`;
-  G.beginPath(); G.moveTo(732 * S, 30 * S); G.lineTo(682 * S, 100 * S); G.lineTo(782 * S, 100 * S); G.closePath(); G.fill();
-  px(731, 16, 2, 12, '#2a2c30'); px(726, 28, 12, 3, '#3a3d42'); px(728, 31, 8, 1, '#fff2c0');
+  G.beginPath(); G.moveTo(780 * S, 30 * S); G.lineTo(730 * S, 100 * S); G.lineTo(830 * S, 100 * S); G.closePath(); G.fill();
+  px(779, 16, 2, 12, '#2a2c30'); px(774, 28, 12, 3, '#3a3d42'); px(776, 31, 8, 1, '#fff2c0');
   // William's Newspeak dictionary: it grows thinner while he works
   const symeBusy = chars.tutor && chars.tutor.pose === 'type' && !chars.tutor.path.length && chars.tutor.spotKey === chars.tutor.deskKey;
   const th = symeBusy ? 2 + Math.sin(now / 900) * 1.5 : 3;
@@ -971,9 +1041,12 @@ function drawDynamic(now) {
   }
   hallScreen(now);
   drawClock(now);
+  // a canister shooting along the Records Department's tube when something is filed
+  if (recordsPulse && now - recordsPulse < 2600) { const k = (now - recordsPulse) / 2600; px(160 - k * 208, 29.5, 6, 4, '#c9b27a'); px(160 - k * 208, 29.5, 6, 1, '#e8d8a0'); }
+  px(126, 34, 32, 7, '#1d1f22'); text('FILED ' + String(filedCount).padStart(3, '0'), 142, 39.4, 9, recordsPulse && now - recordsPulse < 4000 ? '#6cc070' : '#e3b341', 'center');
   // the Ministry of Love machines wake up during an interrogation
   const act = machinesActive;
-  G.save(); G.translate(312 * S, 248 * S);
+  G.save(); G.translate(360 * S, 248 * S);
   for (let k = 0; k < 2; k++) {
     const x0 = 360 + k * 40; px(x0, -54, 32, 9, '#0d1512');
     for (let i = 0; i < 31; i++) { const amp = act ? 3.4 : 1; const v = Math.sin(now / (act ? 90 : 400) + i * (k ? .9 : .6)) * amp + (act && Math.random() < .08 ? (Math.random() - .5) * 6 : 0); px(x0 + 1 + i, -49.5 + Math.max(-3.8, Math.min(3.8, v)), 1, .8, k ? '#e3b341' : '#6cc070'); }
@@ -990,7 +1063,7 @@ function drawDynamic(now) {
   G.restore();
   // Room 101's red bulb
   const pulse = .5 + Math.sin(now / 500) * .2;
-  px(730, 334, 4, 3, '#ff3b2f');
+  px(778, 334, 4, 3, '#ff3b2f');
   const r1 = ROOMS.r101; G.fillStyle = `rgba(200,30,20,${.12 * pulse})`; G.fillRect(r1.x * S, r1.y * S, r1.w * S, r1.h * S);
 }
 
@@ -1068,15 +1141,17 @@ function drawLight() {
   rect(ROOMS.hall);
   if (gold) { G.fillStyle = `rgba(255,140,60,${gold * .14})`; G.fillRect(LEFT * S, 0, W * S, H * S); }
   if (!n) return;
-  G.fillStyle = `rgba(12,16,40,${n * .32})`; G.fillRect(168 * S, 8 * S, 640 * S, 584 * S);
+  G.fillStyle = `rgba(12,16,40,${n * .32})`; G.fillRect(-64 * S, 8 * S, 1104 * S, 584 * S);
   G.fillStyle = `rgba(8,10,30,${n * .62})`;
-  G.fillRect(LEFT * S, 0, 8 * S, H * S); G.fillRect(808 * S, 0, 8 * S, H * S); G.fillRect(168 * S, 592 * S, 640 * S, (H - 592) * S); G.fillRect(168 * S, 0, 640 * S, 8 * S);
+  G.fillRect(LEFT * S, 0, 8 * S, H * S); G.fillRect(1040 * S, 0, 8 * S, H * S); G.fillRect(-64 * S, 592 * S, 1104 * S, (H - 592) * S); G.fillRect(-64 * S, 0, 1104 * S, 8 * S);
   G.globalCompositeOperation = 'lighter';
   for (const [lx, ly] of LAMPS) glow(lx + 1, ly - 22, 34, 'rgba(255,200,120,A)', .35 * n);
   glow(520, 22, 40, 'rgba(127,212,193,A)', .2 * n);
-  glow(742, 480, 30, 'rgba(110,200,170,A)', .18 * n);
+  glow(790, 480, 30, 'rgba(110,200,170,A)', .18 * n);
   glow(451, 494, 18, 'rgba(255,220,200,A)', .2 * n);
   for (const [k, d] of Object.entries(DESKS)) { const who = taken[k] && chars[taken[k]]; if (who && who.pose === 'type') glow(d.x, d.y - 20, 16, 'rgba(127,212,193,A)', .3 * n); }
+  // the lights in the cells never go off
+  const c = ROOMS.cells; G.fillStyle = `rgba(255,255,240,${n * .22})`; G.fillRect(c.x * S, c.y * S, c.w * S, c.h * S);
   G.globalCompositeOperation = 'source-over';
 }
 function updateClock() {
@@ -1106,8 +1181,9 @@ function clampCam() {
 function focusRoom(key) {
   const r = ROOMS[key];
   cam.follow = false; document.getElementById('follow').classList.remove('on');
-  cam.tz = Math.min(view.width / (r.w + 30), view.height / (r.h + 30));
-  cam.tx = r.x + r.w / 2; cam.ty = r.y + r.h / 2 + (r === ROOMS.yard ? -10 : 0); clampCam();
+  const h = Math.min(r.h, r.w * 1.3);                         // long halls: show a good stretch of them, not a speck
+  cam.tz = Math.min(view.width / (r.w + 30), view.height / (h + 30));
+  cam.tx = r.x + r.w / 2; cam.ty = r.h > h ? r.y + h / 2 + 10 : r.y + r.h / 2 + (r === ROOMS.yard ? -10 : 0); clampCam();
 }
 function screenToWorld(sx, sy) {
   const vw = view.width / cam.z, vh = view.height / cam.z;
@@ -1144,7 +1220,7 @@ document.getElementById('zfit').onclick = () => { cam.tz = fitZ(); cam.follow = 
 document.getElementById('follow').onclick = e => { cam.follow = !cam.follow; e.target.classList.toggle('on', cam.follow); if (cam.follow && cam.tz < fitZ() * 2.5) cam.tz = fitZ() * 2.5; };
 const ROOM_BUTTONS = [['ceo', 'YOUR OFFICE'], ['woff', "WINSTON'S OFFICE"], ['board', 'INTERROGATION'], ['mlove', 'MINISTRY OF LOVE'], ['r101', 'ROOM 101'],
                       ['eng', 'MINISTRY OF PEACE'], ['acad', 'MINISTRY OF TRUTH'], ['biz', 'MINISTRY OF PLENTY'], ['crea', 'MINISTRY OF FICTION'],
-                      ['hall', 'ASSEMBLY ROOM'], ['canteen', 'CANTEEN'], ['surv', 'SURVEILLANCE'], ['yard', 'YARD']];
+                      ['records', 'RECORDS DEPARTMENT'], ['cells', 'CELLS'], ['wc', 'TOILETS'], ['hall', 'ASSEMBLY ROOM'], ['canteen', 'CANTEEN'], ['surv', 'SURVEILLANCE'], ['yard', 'YARD']];
 document.getElementById('rooms').innerHTML = ROOM_BUTTONS.map(([k, l]) => `<button type="button" data-room="${k}">${l}</button>`).join('');
 document.getElementById('rooms').onclick = e => { const k = e.target.dataset.room; if (k) focusRoom(k); };
 window.addEventListener('resize', resize);
@@ -1314,7 +1390,7 @@ document.getElementById('recordsBtn').onclick = () => {
   const open = !recordsEl.classList.contains('open');
   recordsEl.classList.toggle('open', open); log.classList.toggle('hidden', open);
   document.getElementById('recordsBtn').classList.toggle('on', open);
-  if (open) openRecords();
+  if (open) { openRecords(); if (!gameOn) focusRoom('records'); }
 };
 recordsEl.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -1411,7 +1487,7 @@ function addEntry(ev, live = true) {
   const el = document.createElement('div');
   if (ev.type === 'diary') {
     if (ev.kind === 'verdict') { el.className = 'pill ' + (/cleared|quick job|reworked/.test(ev.text) ? 'ok' : 'no'); el.textContent = ev.text; }
-    else if (ev.kind === 'released') { el.className = 'pill released'; el.textContent = ev.text; disableDecision(); if (live) announce('Big Brother has approved new work for release. ' + fakeFigure(), true); }
+    else if (ev.kind === 'released') { el.className = 'pill released'; el.textContent = ev.text; disableDecision(); if (live) { announce('Big Brother has approved new work for release. ' + fakeFigure(), true); fileRecord(); } }
     else {
       el.className = 'msg ' + (ev.from === 'user' ? 'you ' : '') + (ev.kind || '');
       const c = chars[ev.from];
@@ -1553,6 +1629,22 @@ document.getElementById('callmode').onclick = e => {
   if (talkTo !== 'head') startTalk(talkTo);
 };
 let machinesActive = false, dialLevel = 0;
+let recordsPulse = 0, filedCount = 0;
+// Winston carries approved work down to the Records Department and files it
+async function fileRecord() {
+  const w = chars.head;
+  const pulse = () => { recordsPulse = performance.now(); filedCount++; sfx('puff'); feedLine('Records Department', `Filed. ${filedCount} records and counting.`, '#e3b341'); };
+  if (!w || (w.serverJob && w.spotKey !== 'max-report') || meeting || gameOn) { pulse(); return; }   // he can leave if he's only waiting in your office
+  await new Promise(r => setTimeout(r, 1500));
+  if (w.serverJob && w.spotKey !== 'max-report') { pulse(); return; }
+  w.filing = true; w.serverJob = false; w.engaged = true; goTo(w, 'records', 'records-file');
+  const t0 = performance.now();
+  while (w.path.length && performance.now() - t0 < 40000 && w.filing) await new Promise(r => setTimeout(r, 300));
+  if (!w.filing) return;
+  emote('head', 'doc', 3000); pulse();
+  await new Promise(r => setTimeout(r, 3000));
+  if (w.filing) { w.filing = false; engage(w, 'free'); }
+}
 function setStatus(t) { document.getElementById('status').textContent = t; machinesActive = /interrogat|judging the pitch/i.test(t); }
 function idleStatus() {
   const anyone = Object.values(chars).some(c => !c.npc && !c.hidden);
@@ -1852,9 +1944,11 @@ function caught(avgS) {
 }
 function vaporised(why) {
   const record = recordBest();
+  const cell = CELLS.find(k => !taken[k]);
+  if (chars.player && cell) setTimeout(() => { if (gameOn && chars.player) { chars.player.npc = true; goTo(chars.player, 'cells', cell); focusRoom('cells'); } }, 1500);
   sfx('buzzer'); puff('biz');
   setStatus('Three warnings. Clerk 6079 has become an unperson.');
-  resultCard('caught', 'UNPERSON', `${why} That's your third warning: clerk 6079 never existed.<br>Final score <b>${game.score}</b>, level <b>${game.level}</b>.${record ? ' <b>A new best run.</b>' : ''}`,
+  resultCard('caught', 'UNPERSON', `${why} That's your third warning: clerk 6079 is taken to the Holding Cells, and never existed.<br>Final score <b>${game.score}</b>, level <b>${game.level}</b>.${record ? ' <b>A new best run.</b>' : ''}`,
     '<button class="btn ok" id="gagain" type="button">TRY AGAIN</button><button class="btn" id="gquit" type="button">BACK TO BIG BROTHER</button>');
 }
 function endGame() {
@@ -1922,6 +2016,9 @@ async function start() {
     ['withers', 'Withers', 'Ministry of Truth', 'acad-d2'], ['katharine', 'Katharine', 'Ministry of Truth', 'acad-d3'],
     ['ogilvy', 'Ogilvy', 'Ministry of Plenty', 'biz-d1'], ['bumstead', 'Bumstead', 'Ministry of Plenty', 'biz-d2'], ['mrsparsons', 'Mrs Parsons', 'Ministry of Plenty', 'biz-d3'],
     ['golding', 'Golding', 'Ministry of Fiction', 'crea-d1'], ['ogden', 'Ogden', 'Surveillance', 'watch0'],
+    ['syme', 'Syme', 'Records Department', 'rec-d0-0'], ['wilsher', 'Wilsher', 'Records Department', 'rec-d1-112'], ['tillett', 'Tillett', 'Records Department', 'rec-d3-0'],
+    ['hale', 'Hale', 'Records Department', 'rec-d4-112'], ['mills', 'Mills', 'Records Department', 'rec-d6-0'], ['pryce', 'Pryce', 'Records Department', 'rec-d7-112'],
+    ['janitor', 'Mrs Smith', 'Janitor', 'janitor'],
   ];
   const HAIR = ['#2b1d14', '#4a3324', '#7a5a3a', '#c9a66b', '#1c1a19', '#8a8580', '#5a3020'];
   const SKIN = ['#f1c9a5', '#e0b08a', '#c68a5e', '#9c6b48', '#f3d2b3', '#d9a07a'];
@@ -1930,7 +2027,8 @@ async function start() {
     if (used.has(desk)) return;
     LOOKS[id] = { hair: HAIR[i % HAIR.length], skin: SKIN[(i * 3) % SKIN.length], clothes: '#3b4a6b', tie: '#2f3a52', pants: '#2f3a52', outfit: 'overalls',
                   style: ['short', 'long', 'short', 'spiky'][i % 4] };
-    const c = makeChar({ id, name, role: 'Party member', color: '#9aa6bd', department: dept });
+    if (id === 'janitor') LOOKS.janitor = { hair: '#8a8580', skin: '#e8c2a0', clothes: '#5a6e5a', tie: '#3a4a3a', pants: '#3a4a3a', outfit: 'overalls', style: 'long' };
+    const c = makeChar({ id, name, role: id === 'janitor' ? 'Janitor' : 'Party member', color: '#9aa6bd', department: dept });
     c.extra = true; c.deskKey = desk; used.add(desk);
     if (workHours(c)) { place(c, DESKS[desk].room, desk); c.nextAt = performance.now() + 10000 + Math.random() * 40000; }
   });
@@ -1951,6 +2049,14 @@ async function start() {
   };
   roster.ondblclick = e => { const id = e.target.closest('.chip')?.dataset.id; if (id) { talkSel.value = id; startTalk(id); } };
 
+  // the unpersons are held in the cells; nobody remembers them
+  (state.unpersons || []).slice(0, CELLS.length - 1).forEach((u, i) => {
+    const id = 'unperson' + i;
+    LOOKS[id] = { hair: '#8a8580', skin: ['#e0b08a', '#c68a5e', '#f1c9a5'][i % 3], clothes: '#8a8a84', pants: '#6b6b66', outfit: 'overalls', tie: '#6b6b66', style: 'short' };
+    const c = makeChar({ id, name: u.name, role: 'Unperson', color: '#8a8580' }, true);
+    c.extra = true; place(c, 'cells', CELLS[i]);
+  });
+  apiFetch('/api/records').then(r => r.json()).then(list => { filedCount = list.length || 0; }).catch(() => {});
   state.history.forEach(ev => addEntry(ev, false));
   if (!state.awaitingDecision) disableDecision();
   setBusy(state.busy);
@@ -1960,6 +2066,8 @@ async function start() {
   const onEvent = ev => {
     if (ev.type === 'move') {
       const c = chars[ev.id]; if (!c) return;
+      if (c.filing && ev.room === 'free') return;              // Winston is busy filing in the Records Department
+      c.filing = false;
       c.serverJob = ev.room !== 'free';
       if (c.serverJob && talkTarget === ev.id && ev.id !== 'head') { releaseTarget(); talkTo = 'head'; talkSel.value = 'head'; startTalk('head'); }
       if (!engage(c, ev.room) && c.hidden && workHours(c)) { const ch = idleChoice(c); if (ch) goTo(c, ch[0], ch[1]); }

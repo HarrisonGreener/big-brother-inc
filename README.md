@@ -35,6 +35,8 @@ The 1984 setting isn't just decoration. Most of the book's ideas map onto a real
 | **The Ministries** | The Ministry of Peace (code), Truth (study and research), Plenty (business) and Fiction (writing and pictures) | *Specialist* agents, each with its own persona, skills and model. Later staff build on earlier staff's work. |
 | **The Thought Police** | O'Brien, Charrington and Martin, who only ever judge | *Reviewer* agents. They score every substantial piece of work blind and hold up scorecards. Each runs on a different model family, so they make different mistakes and catch different errors. |
 | **The Ministry of Love** | A machine room in the east wing, between Interrogation and Room 101, full of dials, brainwave screens and a chair with straps | Atmosphere with a purpose: the machines wake up whenever work is being judged, so you can see the review step happening. |
+| **The Records Department** | A long hall of cubicles with pneumatic tubes and memory holes | When you approve work, Winston carries it down and files it; a canister shoots along the tube and the counter ticks up. The RECORDS button takes you there. |
+| **The cells** | Three cells inside the Ministry of Love, lit day and night | Unpersons are held here, and a clerk who collects three warnings in the minigame ends up here too. |
 | **Room 101** | Where guilty work, and its author, are sent | A *revision loop*. Work that fails review is rewritten using the reviewers' notes, then judged again. |
 | **The memory hole** | Rejected drafts are dropped down a slot in the wall | A visual record that failure happened. Every rejected draft is also kept in the Records archive. |
 | **Telescreens** | Screens in every room, live CCTV in Surveillance, and a scrolling announcement ticker | *Observability.* You can watch each agent think: their screen fills as they write, and every step appears in the building feed. |
@@ -62,8 +64,9 @@ themselves and a member of the Brotherhood awards bonus points for quietly mocki
 ## Features
 
 - **An office you can watch.** A top-down pixel-art building drawn on a canvas: a corridor ring round the Assembly
-  Room, with the Ministries in the west wing, your office in the north, the Ministry of Love wing in the east and the
-  canteen, lobby and surveillance in the south. Hand-made sprites, pathfinding round the
+  Room, with the Ministries in the west wing, your office in the north, the Ministry of Love wing (Interrogation, the
+  machine room, the cells and Room 101) in the east and the canteen, lobby and surveillance in the south. The Records
+  Department runs down the far west side; there are toilets and a janitor's closet too. Hand-made sprites, pathfinding round the
   ring, a day/night cycle that follows the real clock, zoom and pan, and procedurally generated sound.
 - **Delegation.** Winston reads each request and assigns one to three staff in order. Quick jobs come straight
   back; substantial ones are sent for review.
