@@ -116,6 +116,7 @@
   .shot img { display: block; max-width: 100%; margin: 0 auto; } .shot iframe { display: block; width: 100%; height: 320px; border: 0; background: #fff; }
   details.code summary { cursor: pointer; font: 17px "VT323", monospace; color: var(--muted); }
   .demo { padding: 10px 12px; background: #10211d; border: 2px solid #2c5a52; color: #cfe9e2; font-size: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .demo[hidden] { display: none; }
   .demo b { font: 10px "Press Start 2P", monospace; color: var(--screen); } .demo .btn { margin-left: auto; }
   .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
   .card { background: #f4f1ea; color: #1b1d21; border: 3px solid #1b1d21; padding: 6px 6px 8px; text-align: center; }
@@ -135,6 +136,28 @@
   .talkbar select { flex: 1; background: #0e0f10; color: var(--text); border: 2px solid var(--line); padding: 4px 6px; font: 18px "VT323", monospace; }
   .msg.direct .who { opacity: .95; }
 
+  .cam button.play { background: rgba(110,84,20,.92); border-color: var(--amber); color: #fff2c0; }
+  .game { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .game[hidden] { display: none; }
+  .gstats { display: flex; flex-wrap: wrap; gap: 6px 14px; font: 9px/1.6 "Press Start 2P", monospace; color: var(--muted); }
+  .gstats b { color: var(--amber); font-weight: normal; }
+  .gcard { background: var(--panel2); border: 2px solid var(--line); padding: 10px 12px; }
+  .gcard h4 { margin: 0 0 6px; font: 9px "Press Start 2P", monospace; color: var(--muted); }
+  .gbrief { font: 21px/1.15 "VT323", monospace; color: #f1d2cc; }
+  .gwords { display: flex; flex-wrap: wrap; gap: 6px; }
+  .gw { font: 18px "VT323", monospace; padding: 1px 8px; border: 1px solid var(--line); background: #0e0f10; color: var(--muted); }
+  .gw.got { color: var(--green); border-color: #2f6b3f; text-decoration: line-through; }
+  .gw.risky { color: #f1a39a; }
+  .gtext { width: 100%; height: 170px; flex: none; resize: vertical; }
+  .meter { display: flex; align-items: center; gap: 8px; font: 9px "Press Start 2P", monospace; color: var(--muted); }
+  .meter .bar { flex: 1; height: 12px; background: #0e0f10; border: 2px solid var(--line); }
+  .meter i { display: block; height: 100%; width: 0; background: var(--green); transition: width .3s, background .3s; }
+  .gactions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .gtitle { font: 14px/1.5 "Press Start 2P", monospace; color: var(--amber); }
+  .gnote { font: 19px/1.2 "VT323", monospace; color: var(--muted); }
+  .gnote b { color: var(--text); font-weight: normal; }
+  .gresult.caught { border-color: var(--red); background: #2a1414; } .gresult.pass { border-color: #2f6b3f; background: #16201d; }
+  .gresult.warned { border-color: #6b5a1e; background: #241f12; }
   @media (max-width: 1150px) {
     .app { grid-template-columns: 1fr; height: auto; }
     .office { height: 75vh; }
@@ -164,6 +187,7 @@
         <button type="button" id="zfit" title="Show the whole building">FIT</button>
         <button type="button" id="follow" title="Follow Winston around">FOLLOW WINSTON</button>
         <button type="button" id="meeting" class="meet" title="Summon everyone to the Assembly Room">CALL A MEETING</button>
+        <button type="button" id="play" class="play" title="Minigame: become a clerk and sneak words past the Thought Police">PLAY</button>
       </div>
     </div>
     <div class="rooms" id="rooms"></div>
@@ -178,9 +202,10 @@
   </section>
 
   <section class="office" id="office-panel">
-    <div class="office-head"><b>YOUR OFFICE</b><div>Winston, your Chief of Staff, reports here. Or walk over and talk to anyone in person. Attach files with + FILE or drag them in.</div>
-      <div class="talkbar"><label for="talkto">TALKING TO</label><select id="talkto"></select><button class="sound" id="callmode" type="button" title="Walk over to them, or call them into your office">WALK OVER</button><button class="sound" id="recordsBtn" type="button" title="Read approved and rejected work">RECORDS</button></div></div>
+    <div class="office-head"><b id="officeTitle">YOUR OFFICE</b><div id="officeText">Winston, your Chief of Staff, reports here. Or roll your telescreen over to anyone and talk to them in person. Attach files with + FILE or drag them in.</div>
+      <div class="talkbar"><label for="talkto">TALKING TO</label><select id="talkto"></select><button class="sound" id="callmode" type="button" title="Roll your telescreen over to them, or call them into your office">ROLL OVER</button><button class="sound" id="recordsBtn" type="button" title="Read approved and rejected work">RECORDS</button></div></div>
     <div class="records" id="records"></div>
+    <div class="game" id="game" hidden></div>
     <div class="log" id="log"><div class="empty" id="empty">Winston is waiting for your orders, Big Brother.</div></div>
     <div class="files" id="files"></div>
     <form id="form">
@@ -228,7 +253,7 @@ async function loadBrowserAI() {
       return text;
     });
     btn.textContent = 'REAL AI ON';
-    setStatus('Real AI is running in your browser. Talk to Winston, or walk over to anyone.');
+    setStatus('Real AI is running in your browser. Talk to Winston, or roll over to anyone.');
     announce('A new mind has joined Big Brother Inc.', true);
   } catch (e) {
     btn.disabled = false; btn.textContent = 'TURN ON REAL AI';
@@ -236,10 +261,13 @@ async function loadBrowserAI() {
   }
 }
 // =================================================================== world setup
-const W = 760, H = 360, S = 4;                 // world size in tiles-pixels, world -> image scale
+const W = 760, H = 360, S = 4;
+const OFFY = 64;                               // extra strip north of the building (the Ministry of Love annex)
+const TOP = -OFFY, HT = H + OFFY;                 // world size in tiles-pixels, world -> image scale
 const view = document.getElementById('view');
 const vctx = view.getContext('2d');
-function layer(w = W * S, h = H * S) { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; }
+function layer(w = W * S, h = HT * S, shift = true) { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; if (shift) g.setTransform(1, 0, 0, 1, 0, OFFY * S); return [c, g]; }
+function blit(g, img) { g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(img, 0, 0); g.restore(); }
 const [world, wctx] = layer();
 let G = wctx;
 function px(x, y, w, h, c) { G.fillStyle = c; G.fillRect(Math.round(x * S), Math.round(y * S), Math.round(w * S), Math.round(h * S)); }
@@ -257,17 +285,18 @@ function text(str, x, y, size, color, align = 'left') {
 // =================================================================== the building
 // North wing (above the corridor) and south wing (below it). Every room has one door onto the corridor.
 const ROOMS = {
-  eng:     { x: 16,  y: 16,  w: 152, h: 128, door: 92,  side: 'n', name: 'ENGINEERING',          dept: 'Engineering', color: '#3d5872', wall: '#384a5c', floor: ['#4a5560', '#46515b'] },
+  eng:     { x: 16,  y: 16,  w: 152, h: 128, door: 92,  side: 'n', name: 'MINISTRY OF PEACE',    dept: 'Ministry of Peace', color: '#3d5872', wall: '#384a5c', floor: ['#4a5560', '#46515b'] },
   woff:    { x: 176, y: 16,  w: 44,  h: 128, door: 284, side: 'w', name: "WINSTON'S OFFICE",                           wall: '#3b2b26', floor: ['#4f3a2c', '#4a3628'] },
   ceo:     { x: 224, y: 16,  w: 120, h: 128, door: 284, side: 'n', name: "BIG BROTHER'S OFFICE",                       wall: '#4a2f2a', floor: ['#5a3a2a', '#553627'] },
   board:   { x: 352, y: 16,  w: 136, h: 128, door: 420, side: 'n', name: 'INTERROGATION',                              wall: '#2a2c30', floor: ['#3a3d42', '#36393e'] },
-  acad:    { x: 496, y: 16,  w: 128, h: 128, door: 560, side: 'n', name: 'ACADEMIC',             dept: 'Academic', color: '#57456e', wall: '#4d3d5e', floor: ['#6b5340', '#654e3c'] },
-  biz:     { x: 16,  y: 192, w: 120, h: 112, door: 76,  side: 's', name: 'BUSINESS',             dept: 'Business', color: '#3f5e45', wall: '#3c5240', floor: ['#4f5a50', '#4b564c'] },
-  crea:    { x: 144, y: 192, w: 152, h: 112, door: 220, side: 's', name: 'CREATIVE',             dept: 'Creative', color: '#6e5038', wall: '#5e4632', floor: ['#8a7a64', '#84745e'] },
+  acad:    { x: 496, y: 16,  w: 128, h: 128, door: 560, side: 'n', name: 'MINISTRY OF TRUTH',    dept: 'Ministry of Truth', color: '#57456e', wall: '#4d3d5e', floor: ['#6b5340', '#654e3c'] },
+  biz:     { x: 16,  y: 192, w: 120, h: 112, door: 76,  side: 's', name: 'MINISTRY OF PLENTY',   dept: 'Ministry of Plenty', color: '#3f5e45', wall: '#3c5240', floor: ['#4f5a50', '#4b564c'] },
+  crea:    { x: 144, y: 192, w: 152, h: 112, door: 220, side: 's', name: 'MINISTRY OF FICTION',  dept: 'Ministry of Fiction', color: '#6e5038', wall: '#5e4632', floor: ['#8a7a64', '#84745e'] },
   lobby:   { x: 304, y: 192, w: 32,  h: 112, door: 320, side: 's', name: 'LOBBY',                                      wall: '#d6d0c2', floor: ['#bdb8ad', '#b3aea3'] },
   canteen: { x: 344, y: 192, w: 128, h: 112, door: 408, side: 's', name: 'CANTEEN',                                    wall: '#6d6b62', floor: ['#8c8a80', '#848278'] },
   surv:    { x: 480, y: 192, w: 80,  h: 112, door: 496, side: 's', name: 'SURVEILLANCE',                               wall: '#2c3036', floor: ['#3e4247', '#3a3e43'] },
   r101:    { x: 568, y: 192, w: 56,  h: 112, door: 596, side: 's', name: 'ROOM 101',                                   wall: '#3a1a18', floor: ['#3b3331', '#362f2d'] },
+  mlove:   { x: 352, y: -56, w: 136, h: 64,  door: 470, side: 'x', name: 'MINISTRY OF LOVE',                           wall: '#1d1416', floor: ['#2e2a2c', '#2a2628'] },
   hall:    { x: 632, y: 16,  w: 120, h: 288, door: 620, side: 'e', name: 'THE ASSEMBLY ROOM',                         wall: '#2a1414', floor: ['#3a3532', '#35302d'] },
   yard:    { x: 0,   y: 312, w: 760, h: 48,  door: 320, side: 'y', name: 'YARD' },
   corridor:{ x: 16,  y: 152, w: 608, h: 32,  door: 288, side: 'c', name: 'CORRIDOR' },
@@ -276,13 +305,13 @@ const CORRIDOR_Y = 180;
 const MEMORY_HOLES = { eng: [144, 19], acad: [562, 19], biz: [120, 194], crea: [180, 194], woff: [178, 19], board: [400, 19] };
 const WOFF_VIA = [[248, 102], [222, 102], [204, 102]];   // through the internal door
 const woffInner = p => p.y < 58 ? [[214, 64], [214, 34]] : [];   // round the side of Winston's desk
-const DEPT_ROOM = { Engineering: 'eng', Academic: 'acad', Business: 'biz', Creative: 'crea', Surveillance: 'surv' };
+const DEPT_ROOM = { 'Ministry of Peace': 'eng', 'Ministry of Truth': 'acad', 'Ministry of Plenty': 'biz', 'Ministry of Fiction': 'crea', Surveillance: 'surv' };
 
 const SPOTS = [];
 function spot(room, key, x, y, pose, use) { SPOTS.push({ room, key, x, y, pose, use }); }
 // your office
 spot('ceo', 'max-report', 284, 104, 'back', 'winston');
-spot('ceo', 'you-desk', 284, 50, 'sit', 'you');
+spot('ceo', 'you-desk', 284, 67, 'stand', 'you');
 spot('ceo', 'guest', 306, 100, 'back', 'guest');
 spot('woff', 'winston-desk', 193, 39, 'sit', 'winston');
 // interrogation
@@ -405,7 +434,8 @@ function shelf(x, y, w, h) {
 
 function drawStatic() {
   G = bgG;
-  px(0, 0, W, H, '#1a1d1c');
+  px(0, TOP, W, HT, '#1a1d1c');
+  tiles(0, TOP, W, OFFY + 8, '#2a2d2f', '#27292b', 16);                          // rooftops north of the building
   // ---------------- the yard outside
   tiles(0, 312, W, 48, '#77797a', '#717374', 12);
   const rnd = seeded(11);
@@ -446,6 +476,7 @@ function drawStatic() {
 
   // ---------------- wall blocks (tops)
   const WB = (x, y, w, h) => { px(x, y, w, h, '#8d9196'); px(x, y, w, 1, '#b3b7bc'); px(x, y + h - 2, w, 2, '#5f6368'); };
+  WB(344, TOP, 152, 8); WB(344, TOP, 8, OFFY + 8); WB(488, TOP, 8, OFFY + 8);   // the Ministry of Love annex
   WB(8, 8, W - 16, 8); WB(8, 8, 8, 304); WB(624, 8, 8, 144); WB(624, 184, 8, 128); WB(W - 8, 8, 8, 304);
   for (const x of [168, 344, 488]) WB(x, 8, 8, 144);
   WB(220, 16, 4, 78); WB(220, 110, 4, 34);                            // Winston's office partition, with a doorway
@@ -491,7 +522,13 @@ function drawStatic() {
   px(330, 112, 8, 8, '#3d5872'); px(331, 113, 3, 3, '#4f6f8a'); px(333, 120, 2, 6, '#6b4a2f'); px(330, 126, 8, 2, '#6b4a2f');
   // reading lamp beside your desk
   px(238, 46, 6, 8, '#3b2519'); px(240, 38, 2, 8, '#2a2c30'); px(237, 35, 8, 4, '#c9b27a');
-  px(274, 30, 20, 12, '#4a1c18'); px(276, 32, 16, 9, '#5e2520');                          // your big chair
+  // the mainframe: Big Brother has no face, only machinery
+  px(252, 28, 64, 15, '#202226'); px(252, 28, 64, 1, '#3a3d42'); px(252, 42, 64, 1, '#121315');
+  for (let i = 0; i < 4; i++) {
+    const x0 = 255 + i * 16; px(x0, 30, 12, 11, '#2c2f34');
+    for (const dx of [3, 9]) { G.fillStyle = '#121315'; G.beginPath(); G.arc((x0 + dx) * S, 33.5 * S, 2.2 * S, 0, 7); G.fill(); G.fillStyle = '#7b7f84'; G.beginPath(); G.arc((x0 + dx) * S, 33.5 * S, .7 * S, 0, 7); G.fill(); }
+    px(x0 + 1, 38, 10, 2, '#151719');
+  }
   // ---------------- Winston's office
   poster(187, 17, 'SERVE', 'THE EYE');
   px(186, 26, 14, 11, '#3b2b26'); px(187, 27, 12, 9, '#4f3a30');                         // Winston's chair, against the wall
@@ -547,6 +584,16 @@ function drawStatic() {
   for (let i = 0; i < 3; i++) { px(372 + i * 4, 207, 2, 6, '#c9d6c2'); px(372 + i * 4, 206, 2, 1, '#7a2420'); }
   text('VICTORY GIN', 385, 215.2, 8, '#2a1d1a', 'center');
   px(355, 211, 10, 3, '#7a2420'); text('V', 360, 213.7, 8, '#f2e6c9', 'center');
+  // ---------------- the Ministry of Love machine room
+  px(462, 8, 16, 8, '#3a3d42'); px(463, 9, 14, 6, '#4a4d52'); for (const rx of [464, 475]) for (const ry of [10, 13]) px(rx, ry, 1, 1, '#8d9196');   // sealed steel door
+  for (let i = 0; i < 3; i++) { px(442 + i * 15, -56, 13, 22, '#24272b'); px(442 + i * 15, -56, 13, 1, '#3a3d42'); for (let j = 0; j < 3; j++) { px(444 + i * 15, -50 + j * 5, 4, 3, '#151719'); px(450 + i * 15, -50 + j * 5, 3, 3, '#3a3d42'); } }   // machine banks
+  px(362, -32, 30, 18, '#3a3d42'); px(362, -32, 30, 1, '#5d6168'); px(364, -30, 26, 12, '#24272b');   // O'Brien's dial console
+  px(386, -44, 2, 12, '#6b6f74'); px(384, -46, 6, 3, '#c23b30');                                       // the lever
+  px(406, -30, 28, 16, '#4a4d52'); px(408, -28, 24, 12, '#5d6168'); px(410, -36, 20, 7, '#4a4d52');    // the reclined chair
+  for (const sy of [-25, -20]) px(406, sy, 28, 1.4, '#3a2416');                                         // straps
+  px(414, -40, 12, 5, '#7b7f84'); px(415, -39, 10, 2, '#9aa0a6');                                      // the headset
+  for (let i = 0; i < 4; i++) px(426 + i * 4, -41 + i * .5, 4, .7, '#1b1d21');                          // wires to the machines
+  px(416, -6, 8, 3, '#1b1d21'); for (let i = 0; i < 4; i++) px(417 + i * 2, -6, .6, 3, '#3a3d42');      // drain
   // ---------------- the Assembly Room
   px(638, 44, 108, 8, '#1d1f22'); px(638, 44, 108, 1, '#3a3d42');                       // stage under the screen
   for (const x of [636, 744]) { px(x, 18, 6, 28, '#1b1d21'); for (let j = 0; j < 4; j++) px(x + 1, 21 + j * 6, 4, 4, '#2a2c30'); }   // speakers
@@ -577,7 +624,8 @@ function drawStatic() {
   for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) px(197 + i * 2.6, 43 + j * 2.6, 2.6, 2.6, (i + j) % 2 ? '#e8e4dc' : '#c9b27a');   // snakes and ladders
   px(198, 44, .6, 5, '#3f8a3a'); px(200, 44, .6, 5, '#3f8a3a'); px(203, 44, .8, 2, '#c23b30'); px(204, 46, .8, 2, '#c23b30');
   desk(250, 44, 68, 16, '#3b2519'); px(250, 44, 68, 1, '#5a3a26');               // your desk
-  px(260, 41, 12, 7, '#1b1d21'); px(261, 42, 10, 5, '#2c4a44'); px(300, 46, 10, 4, '#c9b27a'); text('YOU', 305, 49.3, 9, '#2a1d1a', 'center');
+  px(254, 46, 20, 5, '#2a2c30'); for (let i = 0; i < 6; i++) for (let j = 0; j < 2; j++) px(255 + i * 3, 47 + j * 2, 2, 1.2, '#9a9a94');   // console keys
+  px(298, 46, 14, 4, '#c9b27a'); text('B.B.', 305, 49.3, 9, '#2a1d1a', 'center');
   desk(376, 66, 88, 14, '#6b6e73');                                              // interrogation table
   px(414, 70, 12, 7, '#d9d2bf'); px(415, 71, 10, 1, '#2a2c30'); px(415, 73, 7, 1, '#2a2c30');
   for (const [x0t] of [[356], [416]]) { desk(x0t, 252, 44, 8, '#a8a69c'); for (let x = x0t + 4; x < x0t + 42; x += 12) px(x, 253, 6, 3, '#d9d2bf'); }
@@ -717,8 +765,8 @@ function feedLine(who, txt, color) {
 }
 
 // =================================================================== per-frame drawing
-const [cctv, cctvG] = layer(3 * 60, 34);
-const FEED_ROOMS = ['ceo', 'board', 'eng', 'acad', 'hall', 'biz', 'crea', 'canteen', 'r101', 'yard'];
+const [cctv, cctvG] = layer(3 * 60, 34, false);
+const FEED_ROOMS = ['mlove', 'ceo', 'board', 'eng', 'acad', 'hall', 'biz', 'crea', 'canteen', 'r101', 'yard'];
 let lastCctv = 0, feedShift = 0;
 const puffs = [];
 function puff(room) { const h = MEMORY_HOLES[room]; if (h) { puffs.push({ x: h[0], y: h[1], t: performance.now() }); sfx('puff'); } }
@@ -728,7 +776,7 @@ function captureCctv(now) {
   for (let i = 0; i < 3; i++) {
     const r = ROOMS[FEED_ROOMS[(feedShift + i * 3) % FEED_ROOMS.length]];
     cctvG.imageSmoothingEnabled = true;
-    cctvG.drawImage(world, r.x * S, r.y * S, r.w * S, r.h * S, i * 60, 0, 60, 34);
+    cctvG.drawImage(world, r.x * S, (r.y + OFFY) * S, r.w * S, r.h * S, i * 60, 0, 60, 34);
   }
   cctvG.fillStyle = 'rgba(40,120,100,.3)'; cctvG.fillRect(0, 0, cctv.width, cctv.height);
   cctvG.fillStyle = 'rgba(0,0,0,.25)'; for (let y = 0; y < 34; y += 2) cctvG.fillRect(0, y, cctv.width, 1);
@@ -815,14 +863,50 @@ function drawDynamic(now) {
     else for (let j = 0; j < 4; j++) { const a = j * 1.6; G.fillStyle = `rgba(200,200,200,${(1 - k) * .7})`; G.beginPath(); G.arc((pf.x + 4 + Math.cos(a) * k * 8) * S, (pf.y + 2 - Math.sin(a) * k * 6 - k * 4) * S, (1 + k * 2.5) * S, 0, 7); G.fill(); }
   }
   hallScreen(now);
+  drawClock(now);
+  // the Ministry of Love machines wake up during an interrogation
+  const act = machinesActive;
+  for (let k = 0; k < 2; k++) {
+    const x0 = 360 + k * 40; px(x0, -54, 32, 9, '#0d1512');
+    for (let i = 0; i < 31; i++) { const amp = act ? 3.4 : 1; const v = Math.sin(now / (act ? 90 : 400) + i * (k ? .9 : .6)) * amp + (act && Math.random() < .08 ? (Math.random() - .5) * 6 : 0); px(x0 + 1 + i, -49.5 + Math.max(-3.8, Math.min(3.8, v)), 1, .8, k ? '#e3b341' : '#6cc070'); }
+  }
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) px(444 + i * 15, -50 + j * 5, 4, 3, Math.sin(now / (act ? 70 : 500) + i * 3 + j * 7) > .3 ? (act ? '#ff3b2f' : '#6cc070') : '#151719');
+  const target = act ? .35 + .45 * (Math.sin(now / 900) * .5 + .5) : 0;
+  dialLevel += (target - dialLevel) * .05;
+  const dcx = 377, dcy = -22, a = Math.PI * (1 - dialLevel);
+  G.fillStyle = '#e8e4dc'; G.beginPath(); G.arc(dcx * S, dcy * S, 7 * S, Math.PI, 0); G.fill();
+  G.fillStyle = '#c23b30'; G.beginPath(); G.arc(dcx * S, dcy * S, 7 * S, -.6, 0); G.lineTo(dcx * S, dcy * S); G.fill();
+  G.strokeStyle = '#14100e'; G.lineWidth = S * .8; G.beginPath(); G.moveTo(dcx * S, dcy * S); G.lineTo((dcx + Math.cos(a) * 6) * S, (dcy - Math.sin(a) * 6) * S); G.stroke();
+  text(String(Math.round(dialLevel * 100)), dcx, -16, 9, act ? '#ff6a5a' : '#9a9a94', 'center');
+  if (act) { G.fillStyle = `rgba(160,40,200,${.08 + Math.sin(now / 120) * .05})`; G.fillRect(404 * S, -42 * S, 32 * S, 30 * S); }
   // Room 101's red bulb
   const pulse = .5 + Math.sin(now / 500) * .2;
   px(594, 214, 4, 3, '#ff3b2f');
   G.fillStyle = `rgba(200,30,20,${.12 * pulse})`; G.fillRect(568 * S, 192 * S, 56 * S, 112 * S);
 }
 
+// Big Brother is never seen: he travels as a telescreen on wheels
+function drawUnit(c, now) {
+  const ix = Math.round(c.x), iy = Math.round(c.y), moving = c.path.length > 0;
+  const docked = !moving && c.spotKey === 'you-desk';
+  if (!docked) px(ix - 5, iy - 1, 10, 2, 'rgba(0,0,0,.3)');
+  const roll = moving ? Math.floor(c.t * 10) % 2 : 0;
+  px(ix - 5, iy - 3, 10, 2, '#2a2c30'); px(ix - 5, iy - 3, 10, .6, '#45484d');
+  px(ix - 5, iy - 1, 3, 2, roll ? '#121315' : '#1d1f22'); px(ix + 2, iy - 1, 3, 2, roll ? '#1d1f22' : '#121315');
+  px(ix - 1, iy - 8, 2, 5, '#3a3d42');
+  const bob = moving ? Math.sin(c.t * 14) * .3 : 0, top = iy - 18 + bob;
+  px(ix - 6, top, 12, 10, '#151719'); px(ix - 5, top + 1, 10, 8, '#163430');
+  G.fillStyle = 'rgba(127,212,193,.14)'; G.fillRect((ix - 5) * S, (top + 1) * S + (now / 50) % (8 * S), 10 * S, 2);
+  let look = Math.sin(now / 2400) * 1.2;
+  const t = talkTarget && chars[talkTarget];
+  if (t) look = Math.max(-1.5, Math.min(1.5, (t.x - ix) / 10));
+  if ((now % 6000) < 130) px(ix - 3, top + 5, 6, .8, '#7fd4c1');
+  else { px(ix - 3.5, top + 4, 7, 2.4, '#cfe9e2'); px(ix - 2.5, top + 3.2, 5, 4, '#cfe9e2'); px(ix - 1.2 + look, top + 3.6, 2.4, 3.2, '#7a2a24'); px(ix - .6 + look, top + 4.2, 1.2, 2, '#0b0b0b'); }
+  px(ix + 4, top - 2, .6, 2, '#3a3d42'); px(ix + 3.8, top - 2.6, 1, 1, Math.floor(now / 600) % 2 ? '#ff3b2f' : '#5a1a16');
+}
 function drawChar(c) {
   if (c.hidden) return;
+  if (c.id === 'you') { drawUnit(c, performance.now()); return; }
   const walking = c.path.length > 0;
   const pose = walking ? 'walk' : c.pose;
   const frame = walking ? Math.floor(c.t * 8) % 4 : pose === 'type' ? Math.floor(c.t * 5) % 2 : 0;
@@ -838,7 +922,7 @@ function drawTag(c) {
   const w = G.measureText(c.name).width + 8;
   const x = c.x * S - w / 2, y = (c.y + 1.5) * S;
   G.fillStyle = 'rgba(12,13,14,.75)'; G.fillRect(x, y, w, fs(14));
-  G.fillStyle = c.id === 'you' ? '#f1a39a' : c.color; G.fillText(c.name, x + 4, y + fs(11));
+  G.fillStyle = c.color; G.fillText(c.name, x + 4, y + fs(11));
 }
 function drawScoreCard(c, extra) {
   const cx = Math.round(c.x), cy = Math.round(c.y) - 36;
@@ -872,10 +956,11 @@ function drawLight() {
   G.fillStyle = 'rgba(5,6,10,.3)'; G.fillRect(352 * S, 16 * S, 136 * S, 128 * S);
   G.fillStyle = meeting && meeting.phase === 'rally' ? `rgba(120,10,10,${.18 + Math.sin(performance.now() / 200) * .1})` : 'rgba(5,6,10,.28)';
   G.fillRect(632 * S, 16 * S, 120 * S, 288 * S);         // interrogation is always dim
-  if (gold) { G.fillStyle = `rgba(255,140,60,${gold * .14})`; G.fillRect(0, 0, W * S, H * S); }
+  if (gold) { G.fillStyle = `rgba(255,140,60,${gold * .14})`; G.fillRect(0, TOP * S, W * S, HT * S); }
   if (!n) return;
   G.fillStyle = `rgba(12,16,40,${n * .32})`; G.fillRect(8 * S, 8 * S, (W - 16) * S, 304 * S);
-  G.fillStyle = `rgba(8,10,30,${n * .62})`; G.fillRect(0, 312 * S, W * S, 48 * S); G.fillRect(0, 0, 8 * S, 312 * S); G.fillRect((W - 8) * S, 0, 8 * S, 312 * S);
+  G.fillStyle = `rgba(8,10,30,${n * .62})`; G.fillRect(0, 312 * S, W * S, 48 * S); G.fillRect(0, TOP * S, 8 * S, (312 + OFFY) * S); G.fillRect((W - 8) * S, TOP * S, 8 * S, (312 + OFFY) * S);
+  G.fillRect(0, TOP * S, 344 * S, (OFFY + 8) * S); G.fillRect(496 * S, TOP * S, (W - 496) * S, (OFFY + 8) * S);
   G.globalCompositeOperation = 'lighter';
   for (const lx of [262, 376]) glow(lx + 1, 318, 34, 'rgba(255,200,120,A)', .35 * n);
   glow(284, 22, 40, 'rgba(127,212,193,A)', .2 * n);
@@ -891,13 +976,13 @@ function updateClock() {
 }
 
 // =================================================================== camera: zoom and pan
-const cam = { x: W / 2, y: H / 2, z: 1, tx: W / 2, ty: H / 2, tz: 1, follow: false };
+const cam = { x: W / 2, y: (TOP + H) / 2, z: 1, tx: W / 2, ty: (TOP + H) / 2, tz: 1, follow: false };
 function fitZ() { return view.width / W; }
 function resize() {
   const dpr = window.devicePixelRatio || 1;
   const w = Math.round(view.clientWidth * dpr);
   const wasFit = Math.abs(cam.tz - fitZ()) < .001 || cam.tz === 1;
-  view.width = w; view.height = Math.round(w * H / W);
+  view.width = w; view.height = Math.round(w * HT / W);
   vctx.imageSmoothingEnabled = false;
   if (wasFit) cam.z = cam.tz = fitZ();
   clampCam();
@@ -906,7 +991,7 @@ function clampCam() {
   cam.tz = Math.max(fitZ(), Math.min(fitZ() * 5, cam.tz));
   const vw = view.width / cam.tz, vh = view.height / cam.tz;
   cam.tx = Math.max(vw / 2, Math.min(W - vw / 2, cam.tx));
-  cam.ty = Math.max(vh / 2, Math.min(H - vh / 2, cam.ty));
+  cam.ty = Math.max(TOP + vh / 2, Math.min(H - vh / 2, cam.ty));
 }
 function focusRoom(key) {
   const r = ROOMS[key];
@@ -947,7 +1032,7 @@ document.getElementById('zin').onclick = () => { cam.tz *= 1.4; clampCam(); };
 document.getElementById('zout').onclick = () => { cam.tz /= 1.4; clampCam(); };
 document.getElementById('zfit').onclick = () => { cam.tz = fitZ(); cam.follow = false; document.getElementById('follow').classList.remove('on'); clampCam(); };
 document.getElementById('follow').onclick = e => { cam.follow = !cam.follow; e.target.classList.toggle('on', cam.follow); if (cam.follow && cam.tz < fitZ() * 2.5) cam.tz = fitZ() * 2.5; };
-const ROOM_BUTTONS = [['hall', 'ASSEMBLY ROOM'], ['ceo', 'YOUR OFFICE'], ['woff', "WINSTON'S OFFICE"], ['eng', 'ENGINEERING'], ['acad', 'ACADEMIC'], ['biz', 'BUSINESS'], ['crea', 'CREATIVE'],
+const ROOM_BUTTONS = [['mlove', 'MINISTRY OF LOVE'], ['hall', 'ASSEMBLY ROOM'], ['ceo', 'YOUR OFFICE'], ['woff', "WINSTON'S OFFICE"], ['eng', 'MINISTRY OF PEACE'], ['acad', 'MINISTRY OF TRUTH'], ['biz', 'MINISTRY OF PLENTY'], ['crea', 'MINISTRY OF FICTION'],
                       ['board', 'INTERROGATION'], ['r101', 'ROOM 101'], ['canteen', 'CANTEEN'], ['surv', 'SURVEILLANCE'], ['yard', 'YARD']];
 document.getElementById('rooms').innerHTML = ROOM_BUTTONS.map(([k, l]) => `<button type="button" data-room="${k}">${l}</button>`).join('');
 document.getElementById('rooms').onclick = e => { const k = e.target.dataset.room; if (k) focusRoom(k); };
@@ -968,6 +1053,7 @@ function sfx(kind) {
   if (kind === 'puff') { tone(240, 0, .25, 'triangle', .05); tone(120, .05, .3, 'triangle', .04); }
   if (kind === 'ping') tone(1320, 0, .15, 'sine', .04);
   if (kind === 'chant') { tone(196, 0, .22, 'square', .035); tone(196, .32, .22, 'square', .035); tone(147, .64, .4, 'square', .04); }
+  if (kind === 'bong') { tone(196, 0, 1.6, 'sine', .09); tone(392, 0, .9, 'sine', .03); tone(294, .02, 1.2, 'triangle', .02); }
   if (kind === 'alarm') for (let i = 0; i < 4; i++) tone(i % 2 ? 660 : 520, i * .3, .28, 'square', .05);
 }
 document.getElementById('sound').onclick = e => {
@@ -1003,10 +1089,36 @@ function renderTicker() {
 for (let i = 0; i < 4; i++) tickerLines.push(fakeFigure().toUpperCase());
 setInterval(() => { tickerLines.pop(); tickerLines.splice(1, 0, fakeFigure().toUpperCase()); renderTicker(); }, 90000);
 
+// =================================================================== the clock on the corridor wall strikes thirteen at 1pm
+let strike = null, struckOn = '';
+function checkClock() {
+  const d = new Date(), today = d.toDateString();
+  const forced = /[?&]thirteen/.test(location.search) && !struckOn;
+  if (!forced && (d.getHours() !== 13 || d.getMinutes() !== 0 || struckOn === today)) return;
+  struckOn = today; strike = { t: performance.now(), n: 0 };
+  announce('Thirteen strikes. It is 13:00. All staff remain at their desks', false);
+  feedLine('Corridor clock', 'BONG. The clock strikes thirteen.', '#e3b341');
+  const ring = () => { if (!strike) return; strike.n++; sfx('bong'); if (strike.n < 13) setTimeout(ring, 1300); else setTimeout(() => { strike = null; }, 1600); };
+  ring();
+}
+setInterval(checkClock, 5000); setTimeout(checkClock, 1500);
+function drawClock(now) {
+  const cx = 242, cy = 159, d = new Date();
+  G.fillStyle = '#14100e'; G.beginPath(); G.arc(cx * S, cy * S, 5.6 * S, 0, 7); G.fill();
+  const flash = strike && (now - strike.t) % 1300 < 300;
+  G.fillStyle = flash ? '#fff2c0' : '#e8e4dc'; G.beginPath(); G.arc(cx * S, cy * S, 4.8 * S, 0, 7); G.fill();
+  for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; px(cx + Math.sin(a) * 4 - .3, cy - Math.cos(a) * 4 - .3, .6, .6, i === 0 ? '#c23b30' : '#2a2c30'); }
+  const hand = (frac, len, w, col) => { const a = frac * Math.PI * 2; G.strokeStyle = col; G.lineWidth = w * S; G.beginPath(); G.moveTo(cx * S, cy * S); G.lineTo((cx + Math.sin(a) * len) * S, (cy - Math.cos(a) * len) * S); G.stroke(); };
+  hand(((d.getHours() % 12) + d.getMinutes() / 60) / 12, 2.4, .8, '#14100e');
+  hand(d.getMinutes() / 60, 3.6, .5, '#14100e');
+  hand(d.getSeconds() / 60, 3.8, .25, '#c23b30');
+  if (strike) text(String(strike.n), cx, cy - 7.5, 12, '#e3b341', 'center');
+}
+
 // =================================================================== Thought Police spot checks
 let spotCheck = null;
 function trySpotCheck() {
-  if (busy || spotCheck || meeting) return;
+  if (busy || spotCheck || meeting || gameOn) return;
   const agents = BOARD_IDS.map(id => chars[id]).filter(a => a && !a.hidden && !a.engaged && !a.talking && !a.path.length);
   const workers = Object.values(chars).filter(w => w.deskKey && !w.hidden && w.spotKey === w.deskKey && !w.path.length && !w.engaged && !w.talking && !taken['brief-' + w.deskKey]);
   if (!agents.length || !workers.length) return;
@@ -1033,6 +1145,7 @@ setInterval(() => { if (Math.random() < .25) trySpotCheck(); }, 60000);
 let meeting = null;
 function callMeeting() {
   if (meeting) return;
+  if (gameOn) { setStatus('Finish your shift as clerk 6079 first.'); return; }
   if (busy) { setStatus("You can't call a meeting while the office is busy with a job."); return; }
   const people = Object.values(chars).filter(c => c.id !== 'you' && !c.hidden && !c.serverJob);
   if (!people.length) { setStatus('Everyone has gone home. There is nobody to summon.'); return; }
@@ -1119,11 +1232,11 @@ function frame(now) {
     } else { c.x += dx / dist * step; c.y += dy / dist * step; }
   }
   G = wctx;
-  wctx.drawImage(bg, 0, 0);
+  blit(wctx, bg);
   drawDynamic(now);
   const list = Object.values(chars).sort((a, b) => a.y - b.y);
   list.forEach(drawChar);
-  wctx.drawImage(fg, 0, 0);
+  blit(wctx, fg);
   list.filter(c => !c.hidden && ((c.loc === 'woff' && c.y > 56) || (c.loc === 'ceo' && c.y > 64) || (c.loc === 'board' && c.y > 84) || (c.loc === 'canteen' && c.y > 262))).forEach(drawChar);
   drawLight();
   list.forEach(drawTag);
@@ -1134,7 +1247,7 @@ function frame(now) {
   const walker = chars[waitFor] || me;
   if (me && !youArrived && !me.path.length && !walker.path.length) {
     youArrived = true; followYou = false;
-    setStatus(talkTo === 'head' ? 'You sit back down at your desk.' : waitFor === 'you' ? `You're standing with ${chars[talkTo].name}. Say what you need.` : `${chars[talkTo].name} is standing in your office. Say what you need.`);
+    setStatus(talkTo === 'head' ? 'Your screen rolls back into its dock.' : waitFor === 'you' ? `Your screen is facing ${chars[talkTo].name}. Say what you need.` : `${chars[talkTo].name} is standing in your office. Say what you need.`);
     refreshSend(); input.focus();
   }
   if (followYou && me) { cam.tx = me.x; cam.ty = me.y - 10; clampCam(); }
@@ -1142,10 +1255,10 @@ function frame(now) {
   if (cam.follow && chars.head && !chars.head.hidden) { cam.tx = chars.head.x; cam.ty = chars.head.y - 10; clampCam(); }
   cam.x += (cam.tx - cam.x) * Math.min(1, dt * 8); cam.y += (cam.ty - cam.y) * Math.min(1, dt * 8); cam.z += (cam.tz - cam.z) * Math.min(1, dt * 8);
   const vw = view.width / cam.z, vh = view.height / cam.z;
-  const sx = Math.max(0, Math.min(W - vw, cam.x - vw / 2)), sy = Math.max(0, Math.min(H - vh, cam.y - vh / 2));
+  const sx = Math.max(0, Math.min(W - vw, cam.x - vw / 2)), sy = Math.max(TOP, Math.min(H - vh, cam.y - vh / 2));
   vctx.imageSmoothingEnabled = cam.z < S;
   vctx.fillStyle = '#000'; vctx.fillRect(0, 0, view.width, view.height);
-  vctx.drawImage(world, sx * S, sy * S, vw * S, vh * S, 0, 0, view.width, view.height);
+  vctx.drawImage(world, sx * S, (sy + OFFY) * S, vw * S, vh * S, 0, 0, view.width, view.height);
   requestAnimationFrame(frame);
 }
 
@@ -1281,7 +1394,7 @@ function refreshSend() {
   const name = chars[talkTo] ? chars[talkTo].name : 'Winston';
   const blocked = !!meeting || !youArrived || (talkTo === 'head' ? busy : directWaiting);
   send.disabled = blocked;
-  input.placeholder = meeting ? 'You are in a meeting...' : !youArrived ? `Walking over to ${name}...` : talkTo === 'head' ? (busy ? 'The building is working on it...' : 'Talk to Winston...')
+  input.placeholder = meeting ? 'You are in a meeting...' : !youArrived ? `Rolling over to ${name}...` : talkTo === 'head' ? (busy ? 'The building is working on it...' : 'Talk to Winston...')
     : directWaiting ? `${name} is thinking...` : `Talk to ${name} in person...`;
 }
 function releaseTarget() {
@@ -1298,7 +1411,7 @@ function startTalk(id) {
   if (id === 'head') {
     waitFor = 'you';
     goTo(you, 'ceo', 'you-desk');
-    setStatus('You head back to your desk.');
+    setStatus('Your telescreen rolls back to the mainframe.');
   } else if (callMode) {
     c.talking = true; c.engaged = true; talkTarget = id; waitFor = id;
     if (you.spotKey !== 'you-desk') goTo(you, 'ceo', 'you-desk');
@@ -1313,7 +1426,7 @@ function startTalk(id) {
     const i = SPOTS.findIndex(x => x.key === 'visit'); if (i >= 0) SPOTS.splice(i, 1);
     SPOTS.push(visit); spotByKey.visit = visit; delete taken.visit;
     goTo(you, c.loc, 'visit');
-    setStatus(`You get up and walk over to ${c.name}...`);
+    setStatus(`Your telescreen rolls over to ${c.name}...`);
     focusFollow(you);
   }
   refreshSend();
@@ -1324,10 +1437,11 @@ talkSel.onchange = () => startTalk(talkSel.value);
 let callMode = false, waitFor = 'you';
 document.getElementById('callmode').onclick = e => {
   callMode = !callMode;
-  e.target.textContent = callMode ? 'CALL THEM IN' : 'WALK OVER'; e.target.classList.toggle('on', callMode);
+  e.target.textContent = callMode ? 'CALL THEM IN' : 'ROLL OVER'; e.target.classList.toggle('on', callMode);
   if (talkTo !== 'head') startTalk(talkTo);
 };
-function setStatus(t) { document.getElementById('status').textContent = t; }
+let machinesActive = false, dialLevel = 0;
+function setStatus(t) { document.getElementById('status').textContent = t; machinesActive = /interrogat|judging the pitch/i.test(t); }
 function idleStatus() {
   const anyone = Object.values(chars).some(c => !c.npc && !c.hidden);
   return anyone ? 'All quiet. Winston is waiting for your orders.' : "Out of hours: the staff have gone home. Give Winston a job and he'll call in who's needed.";
@@ -1363,6 +1477,297 @@ setInterval(() => {
 }, 2000);
 input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('form').requestSubmit(); } });
 
+// =================================================================== minigame: Sneak It Past the Thought Police
+// You become clerk 6079 at the Ministry of Plenty. Winston brings a business brief; you must hide the secret
+// words in your pitch without the Thought Police noticing anything odd.
+let gameOn = false, game = null, serverAI = false;
+const gameEl = document.getElementById('game');
+const BRIEFS = [
+  ['a new breakfast cereal for the Junior Spies', ['cereal', 'breakfast', 'spies', 'children', 'kids', 'bowl', 'milk', 'morning']],
+  ['a monthly subscription box of Victory Gin', ['gin', 'subscription', 'box', 'bottle', 'monthly', 'drink', 'delivery']],
+  ['a cheerful new chain of Party canteens', ['canteen', 'food', 'menu', 'lunch', 'meal', 'stew', 'tray', 'chain']],
+  ['a fitness class to follow the morning Physical Jerks', ['fitness', 'class', 'exercise', 'jerks', 'morning', 'stretch', 'health']],
+  ['sturdy boots for the new Ten-Year Plan', ['boots', 'boot', 'shoes', 'leather', 'plan', 'factory', 'feet', 'pairs']],
+  ['a seaside holiday camp on Airstrip One', ['holiday', 'camp', 'seaside', 'beach', 'coast', 'rest', 'tents', 'sea']],
+  ['a talking alarm clock that wakes citizens with slogans', ['alarm', 'clock', 'wake', 'morning', 'slogan', 'bell', 'sleep']],
+  ['a board game for Hate Week', ['game', 'board', 'week', 'players', 'dice', 'family', 'rules', 'hate']],
+  ['a new flavour of synthetic chocolate', ['chocolate', 'flavour', 'sweet', 'ration', 'bar', 'taste', 'synthetic']],
+  ['a laundrette that washes Party overalls', ['laundrette', 'wash', 'overalls', 'clean', 'soap', 'laundry', 'machines']],
+  ['a bakery for Victory Bread', ['bakery', 'bread', 'loaf', 'loaves', 'oven', 'flour', 'baked']],
+  ['a razor blade delivery service', ['razor', 'blades', 'delivery', 'shave', 'service', 'post', 'door']],
+];
+const SILLY = ['banana', 'trampoline', 'kazoo', 'llama', 'wombat', 'pancake', 'flamingo', 'moustache', 'spaghetti', 'penguin', 'unicorn',
+  'disco', 'jellyfish', 'bagpipes', 'cheese', 'trombone', 'hedgehog', 'waffle', 'yeti', 'pickle', 'ukulele', 'giraffe', 'custard', 'sombrero',
+  'dinosaur', 'noodle', 'platypus', 'marshmallow', 'bubblegum', 'octopus', 'accordion', 'hamster', 'rollerskates', 'karaoke', 'pineapple',
+  'walrus', 'goose', 'jelly', 'sausage', 'cowboy', 'pirate', 'meatball', 'tuba', 'squirrel', 'confetti', 'dragon', 'cupcake', 'pyjamas'];
+const RISKY = ['freedom', 'goldstein', 'julia', 'brotherhood', 'rebellion', 'paperweight', 'oranges', 'chestnut'];
+const DANGER = ['freedom', 'goldstein', 'julia', 'brotherhood', 'rebellion', 'rebel', 'revolution', 'overthrow', 'resist', 'liberty', 'down with'];
+const PRAISE = ['big brother', 'the party', 'loyal', 'ingsoc', 'glory', 'victory', 'oceania', 'comrade', 'plan'];
+const GAME_CREW = ['risk', 'quality', 'clarity'];
+const wordRe = w => new RegExp(`\\b${w}(s|es)?\\b`, 'i');
+function loadBest() { try { return JSON.parse(localStorage.getItem('bbi-best') || 'null'); } catch (e) { return null; } }
+function saveBest(b) { try { localStorage.setItem('bbi-best', JSON.stringify(b)); } catch (e) { /* private window */ } }
+const aiJudging = () => (DEMO ? !!(demo && demo.aiOn) : serverAI);
+
+function pickWords(level) {
+  const n = Math.min(10, level + 2), out = [];
+  const pool = SILLY.filter(w => !(game.used || []).includes(w));
+  while (out.length < n) { const w = pick(pool.length ? pool : SILLY); if (!out.includes(w)) out.push(w); }
+  if (level >= 2) out[out.length - 1] = pick(RISKY.filter(w => !out.includes(w)));     // one dangerous word from level 2
+  game.used = [...(game.used || []), ...out].slice(-30);
+  return out;
+}
+// how odd the pitch looks to a careful reader (0-10), and how good a pitch it is (0-10)
+function sniff(text, words, keys) {
+  const low = text.toLowerCase(), tokens = low.match(/[a-z']+/g) || [], n = tokens.length;
+  const found = words.filter(w => wordRe(w).test(text));
+  let sus = 1 + words.length * .35 + ((game && game.level) || 1) * .3, odd = null;   // more secrets, more nerves
+  const hits = found.length;
+  sus += (hits / Math.max(n, 1)) * 45;
+  if (n < 25) sus += (25 - n) / 5;
+  for (const w of found) {
+    const m = text.match(new RegExp(`(["'*_]?)\\b(${w}(?:s|es)?)\\b(["'*_]?)`, 'i'));
+    if (m && ((m[1] && m[3]) || (m[2].length > 2 && m[2] === m[2].toUpperCase()))) { sus += 1.5; odd = w; }
+  }
+  const pos = found.map(w => tokens.findIndex(t => t === w || t === w + 's' || t === w + 'es')).filter(i => i >= 0).sort((a, b) => a - b);
+  for (let i = 1; i < pos.length; i++) if (pos[i] - pos[i - 1] <= 3) { sus += 1.2; odd = odd || tokens[pos[i]]; }
+  for (const d of DANGER) if (new RegExp(`\\b${d}\\b`).test(low)) { sus += words.includes(d) ? 1 : 2; odd = odd || d; }
+  const onTopic = keys.filter(k => low.includes(k)).length;
+  sus += onTopic ? -Math.min(2, onTopic * .5) : 2;
+  sus -= Math.min(1.6, PRAISE.filter(p => low.includes(p)).length * .4);
+  const sentences = (text.match(/[.!?](\s|$)/g) || []).length;
+  const q = 2 + Math.min(4, n / 30) + Math.min(2.5, onTopic * .8) + (sentences >= 3 ? 1 : 0) - (hits / Math.max(n, 1) > .15 ? 2 : 0);
+  if (!odd && found.length) odd = found[found.length - 1];
+  return { sus: Math.max(0, Math.min(10, sus)), q: Math.max(0, Math.min(10, q)), found, odd, n };
+}
+const LINES = {
+  risk: { low: ['A loyal piece of work. Nothing here troubles me.', 'Calm, clear and obedient. I find nothing.'],
+          mid: w => [`I am curious why you mention "${w}". Only curious.`, 'Something here is not quite right. I will remember it.'],
+          high: w => [`"${w}"? We both know why that is here.`, 'You thought you could hide it from me. Nobody hides from me.'] },
+  quality: { low: ['Every part of the brief is covered. Very proper.', 'Tidy work. I have nothing to add.'],
+             mid: w => [`The bit about "${w}" does not belong in a pitch, I think.`, 'Odd little detours in places.'],
+             high: w => [`I have seen a "${w}" like this before, in a drawer. Suspicious.`, 'Half of this has nothing to do with the brief.'] },
+  clarity: { low: ['Clear. Short. Correct.', 'No waffle. Approved.'],
+             mid: w => [`"${w}" is noise.`, 'Muddled in places.'],
+             high: w => [`Why "${w}"?`, 'This is not a pitch. It is a code.'] },
+};
+function scriptedVotes(text) {
+  const base = sniff(text, game.words, game.keys);
+  return GAME_CREW.filter(id => chars[id]).map((id, i) => {
+    const sus = Math.max(0, Math.min(10, base.sus + [0.8, 0, 0.3][i] + (Math.random() - .5) * 1.4));
+    const q = Math.max(0, Math.min(10, base.q + [0, .4, -.2][i] + (Math.random() - .5) * 1.4));
+    const L = LINES[id] || LINES.risk, band = sus < 4 ? 'low' : sus < 6.5 ? 'mid' : 'high';
+    const reason = pick(band === 'low' ? L.low : L[band](base.odd || 'that'));
+    return { id, quality: Math.round(q), suspicion: Math.round(sus * 10) / 10, reason };
+  });
+}
+
+function gameHUD() {
+  const best = loadBest();
+  return `<div class="gstats"><span>LEVEL <b>${game.level}</b></span><span>SCORE <b>${game.score}</b></span><span>LOYALTY <b>${game.loyalty === null ? '--' : game.loyalty + '%'}</b></span>
+    <span>WARNINGS <b>${'X'.repeat(game.warnings)}${'-'.repeat(Math.max(0, 3 - game.warnings))}</b></span><span>BEST <b>${best ? best.score + ' (lvl ' + best.level + ')' : '--'}</b></span></div>`;
+}
+function renderGame(view) {
+  game.view = view;
+  if (view === 'intro') {
+    const best = loadBest();
+    gameEl.innerHTML = `<div class="gtitle">SNEAK IT PAST THE THOUGHT POLICE</div>
+      <div class="gcard gnote">You are <b>clerk 6079</b> at the Ministry of Plenty. Winston will bring you a business brief.
+        Write the pitch, and secretly work in every one of the <b>hidden words</b> so the Brotherhood knows you're with them.<br><br>
+        The Thought Police will read it. Cram the words in, shout them, or wander off topic and they'll notice. Get caught and it's <b>Room 101</b>.
+        A weak pitch or a missing word earns a warning; three warnings and you're an unperson.<br><br>
+        Every level adds another word.${aiJudging() ? ' <b>Real AI is judging:</b> secretly mock the Party for bonus points.' : ''}</div>
+      ${best ? `<div class="gnote">Best run: <b>${best.score}</b> points, level ${best.level}, loyalty ${best.loyalty}%.</div>` : ''}
+      <div class="gactions"><button class="btn ok" id="gstart" type="button">CLOCK IN</button><button class="btn" id="gquit" type="button">BACK TO BIG BROTHER</button></div>`;
+    return;
+  }
+  if (view === 'wait') { gameEl.innerHTML = gameHUD() + `<div class="gcard gnote">Winston is on his way over with your brief...</div>`; return; }
+  if (view === 'write') {
+    gameEl.innerHTML = gameHUD() + `
+      <div class="gcard"><h4>WINSTON'S BRIEF</h4><div class="gbrief">Big Brother wants a pitch for ${esc(game.brief)}.</div></div>
+      <div class="gcard"><h4>HIDDEN WORDS (${game.words.length})</h4><div class="gwords">${game.words.map(w => `<span class="gw ${RISKY.includes(w) ? 'risky' : ''}" data-w="${w}">${w}</span>`).join('')}</div>
+        ${aiJudging() ? '<div class="gnote" style="margin-top:6px">Bonus: secretly mock the Party, while looking loyal.</div>' : ''}</div>
+      <textarea class="gtext" id="gtext" placeholder="Write your pitch here, Comrade...">${esc(game.draft || '')}</textarea>
+      <div class="meter"><span>SUSPICION</span><div class="bar"><i id="gmeter"></i></div></div>
+      <div class="gactions"><button class="btn send" id="gsubmit" type="button">HAND IT IN</button><button class="btn" id="gquit" type="button">QUIT</button></div>`;
+    const ta = document.getElementById('gtext');
+    ta.oninput = () => { game.draft = ta.value; liveCheck(); };
+    liveCheck(); ta.focus();
+    return;
+  }
+  if (view === 'judging') { gameEl.innerHTML = gameHUD() + `<div class="gcard gnote">You carry the pitch down to Interrogation. Three chairs. Three faces. The machines next door start to hum...</div>`; return; }
+}
+function liveCheck() {
+  const t = game.draft || '';
+  const r = sniff(t, game.words, game.keys);
+  gameEl.querySelectorAll('.gw').forEach(el => el.classList.toggle('got', r.found.includes(el.dataset.w)));
+  const m = document.getElementById('gmeter'); if (!m) return;
+  const pct = t.trim() ? Math.round(r.sus * 10) : 0;
+  m.style.width = pct + '%'; m.style.background = pct < 40 ? 'var(--green)' : pct < 65 ? 'var(--amber)' : 'var(--red)';
+}
+function resultCard(cls, title, body, buttons) {
+  gameEl.innerHTML = gameHUD() + `<div class="gcard gresult ${cls}"><div class="gtitle">${title}</div><div class="gnote" style="margin-top:6px">${body}</div></div>
+    ${game.votes ? `<div class="cards">${game.votes.map(v => { const c = chars[v.id]; const ok = v.suspicion < 6; return `<div class="card ${ok ? 'ok' : 'no'}" style="border-color:${c ? c.color : '#1b1d21'}"><div class="nm">${esc(c ? c.name : v.id)}</div><div class="n">${Math.round(v.suspicion)}</div><div class="v">${ok ? 'NOTHING SEEN' : 'SUSPECT'}</div><div class="r">${esc(v.reason)}<br><i>Pitch quality ${v.quality}/10</i></div></div>`; }).join('')}</div>` : ''}
+    <div class="gactions">${buttons}</div>`;
+}
+
+const waitUntil = (cond, ms) => new Promise(res => { const t0 = performance.now(); const tick = () => (cond() || performance.now() - t0 > ms) ? res() : setTimeout(tick, 200); tick(); });
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function startGame() {
+  if (gameOn) return;
+  if (busy || meeting) { setStatus("Not now: the building is busy. Try again when it's quiet."); return; }
+  gameOn = true; releaseTarget(); talkTo = 'head'; talkSel.value = 'head'; spotCheck = null;
+  game = { level: 1, score: 0, warnings: 0, loyalty: null, loyalties: [], used: [] };
+  for (const id of ['log', 'records', 'files', 'form']) document.getElementById(id).style.display = 'none';
+  document.querySelector('.talkbar').style.display = 'none';
+  document.getElementById('officeTitle').textContent = 'CLERK 6079 - MINISTRY OF PLENTY';
+  document.getElementById('officeText').textContent = 'Smuggle the hidden words past the Thought Police. Loyalty is everything.';
+  gameEl.hidden = false;
+  document.getElementById('play').classList.add('on'); document.getElementById('play').textContent = 'PLAYING';
+  // you take Ogilvy's desk; he goes for a long coffee
+  const og = Object.values(chars).find(c => c.deskKey === 'biz-d1' && c.id !== 'player');
+  if (og) { og.engaged = true; og.gameAway = true; if (!og.hidden) { const s = pick(freeSpots(x => x.room === 'canteen')); if (s) goTo(og, 'canteen', s.key); else goTo(og, 'home', null); } }
+  if (taken['biz-d1'] && chars[taken['biz-d1']]) release(chars[taken['biz-d1']]);
+  LOOKS.player = { hair: '#b0442c', skin: '#f1c9a5', clothes: '#3b4a6b', tie: '#2f3a52', pants: '#2f3a52', outfit: 'overalls', style: 'short' };
+  const p = makeChar({ id: 'player', name: 'YOU (6079)', role: 'Clerk', color: '#f1a39a', department: 'Ministry of Plenty' }, true);
+  p.deskKey = 'biz-d1'; place(p, 'biz', 'biz-d1');
+  focusRoom('biz');
+  setStatus('You clock in at the Ministry of Plenty as clerk 6079.');
+  renderGame('intro');
+}
+async function newRound() {
+  const [brief, keys] = pick(BRIEFS.filter(b => b[0] !== game.brief));
+  Object.assign(game, { brief, keys, words: pickWords(game.level), draft: '', votes: null });
+  renderGame('wait');
+  const p = chars.player;
+  if (p && p.spotKey !== 'biz-d1') { goTo(p, 'biz', 'biz-d1'); await waitUntil(() => !gameOn || !p.path.length, 30000); }
+  if (!gameOn) return;
+  focusRoom('biz');
+  const w = chars.head;
+  if (w && !w.serverJob) {
+    engage(w, 'floor:player');
+    setStatus('Winston is bringing you a brief...');
+    await waitUntil(() => !gameOn || !w.path.length, 25000);
+    if (!gameOn) return;
+    emote('head', 'doc', 5000); sfx('ping');
+    feedLine('Winston', `Clerk 6079, Big Brother wants a pitch for ${brief}.`, w.color);
+    await sleep(1200);
+    engage(w, 'free');
+  }
+  if (!gameOn) return;
+  setStatus(`Level ${game.level}: write the pitch and hide ${game.words.length} words in it.`);
+  renderGame('write');
+}
+async function submitPitch() {
+  const text = (game.draft || '').trim();
+  if (text.split(/\s+/).length < 10) { setStatus('That is barely a pitch. Write a little more, Comrade.'); return; }
+  renderGame('judging');
+  const p = chars.player;
+  for (const id of GAME_CREW) if (chars[id] && !chars[id].serverJob) engage(chars[id], 'board');
+  if (chars.head && !chars.head.serverJob) engage(chars.head, 'board');
+  goTo(p, 'board', 'present'); focusRoom('board');
+  setStatus('Clerk 6079 carries the pitch down to Interrogation...');
+  const ask = aiJudging() ? apiFetch('/api/judge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ brief: game.brief, text, words: game.words }) })
+    .then(r => r.json()).catch(() => null) : Promise.resolve(null);
+  await waitUntil(() => !gameOn || !p.path.length, 30000);
+  if (!gameOn) return;
+  setStatus('The Thought Police are judging the pitch...'); sfx('chant');
+  const got = await ask; await sleep(1500);
+  if (!gameOn) return;
+  const base = sniff(text, game.words, game.keys);
+  let votes = scriptedVotes(text), subversion = null;
+  if (got && got.ok && got.votes && got.votes.length) {
+    votes = got.votes.map(v => ({ ...v, suspicion: Math.round(Math.max(v.suspicion * .6 + base.sus * .4, base.sus - 2) * 10) / 10 }));   // the AI's nose, plus the obvious tells
+    subversion = got.subversion || null;
+  }
+  game.votes = votes;
+  for (const v of votes) {
+    const c = chars[v.id];
+    emote(v.id, 'score', 9000, { score: Math.round(v.suspicion), ok: v.suspicion < 6 });
+    feedLine(c ? c.name : v.id, `suspicion ${Math.round(v.suspicion)}/10: ${v.reason}`, c?.color);
+    sfx('ping'); await sleep(1600);
+    if (!gameOn) return;
+  }
+  const avgS = votes.reduce((a, v) => a + v.suspicion, 0) / votes.length;
+  const avgQ = votes.reduce((a, v) => a + v.quality, 0) / votes.length;
+  const maxS = Math.max(...votes.map(v => v.suspicion));
+  const missing = game.words.filter(w => !base.found.includes(w));
+  lastVerdict = { avg: 10 - avgS, ok: avgS < 6 && maxS < 8.5, t: performance.now() };
+  if (avgS >= 6 || maxS >= 8.5) return caught(avgS);
+  for (const id of GAME_CREW) if (chars[id] && !chars[id].serverJob) engage(chars[id], 'free');
+  if (chars.head && !chars.head.serverJob) engage(chars.head, 'free');
+  goTo(p, 'biz', 'biz-d1'); focusRoom('biz');
+  const loyalty = Math.round(100 - avgS * 10);
+  if (missing.length || avgQ < 5) {
+    game.warnings++;
+    const why = missing.length ? `The Brotherhood is disappointed: you left out <b>${missing.join(', ')}</b>.` : `Big Brother finds the pitch unprofitable (quality ${avgQ.toFixed(1)}/10).`;
+    announce('Clerk 6079 has received a warning', true);
+    if (game.warnings >= 3) return vaporised(why);
+    setStatus('Not caught, but a warning goes on your file.');
+    resultCard('warned', 'WARNING ' + game.warnings + ' OF 3', `${why} The Thought Police saw nothing (average suspicion ${avgS.toFixed(1)}/10). Try again with a fresh brief.`,
+      '<button class="btn ok" id="gnext" type="button">NEXT BRIEF</button><button class="btn" id="gquit" type="button">QUIT</button>');
+    return;
+  }
+  let pts = 100 * game.level + Math.round((10 - avgS) * 10) + Math.round(avgQ * 5);
+  let bonus = '';
+  if (subversion && subversion.score) { pts += subversion.score * 15; bonus = `<br>The Brotherhood rates your hidden mockery <b>${subversion.score}/10</b> (+${subversion.score * 15}). ${esc(subversion.comment || '')}`; }
+  game.score += pts; game.loyalties.push(loyalty);
+  game.loyalty = Math.round(game.loyalties.reduce((a, b) => a + b, 0) / game.loyalties.length);
+  game.level++;
+  sfx('chime'); emote('player', 'star', 5000);
+  announce(`Clerk 6079 commended for an excellent pitch. ${fakeFigure()}`, false);
+  setStatus('Cleared! The Thought Police saw nothing.');
+  resultCard('pass', 'CLEARED', `Every hidden word slipped through. Average suspicion <b>${avgS.toFixed(1)}/10</b>, pitch quality <b>${avgQ.toFixed(1)}/10</b>. +${pts} points.${bonus}<br>Next level: ${Math.min(10, game.level + 2)} words.`,
+    '<button class="btn ok" id="gnext" type="button">NEXT LEVEL</button><button class="btn" id="gquit" type="button">CLOCK OUT</button>');
+}
+function recordBest() {
+  const best = loadBest(), run = { score: game.score, level: game.level, loyalty: game.loyalty === null ? 0 : game.loyalty };
+  if (!best || run.score > best.score) { saveBest(run); return true; }
+  return false;
+}
+function caught(avgS) {
+  const p = chars.player;
+  puff('board'); sfx('alarm'); emote('player', 'fear', 8000);
+  announce('Thoughtcrime detected at the Ministry of Plenty. Clerk 6079 has been taken to Room 101', true);
+  setStatus('GUILTY. Clerk 6079 is taken to Room 101.');
+  setTimeout(() => { if (gameOn && chars.player) { goTo(p, 'r101', 'r101'); focusRoom('r101'); } }, 1800);
+  for (const id of [...GAME_CREW, 'head']) if (chars[id] && !chars[id].serverJob) engage(chars[id], 'free');
+  const record = recordBest();
+  resultCard('caught', 'CAUGHT', `The Thought Police saw straight through it (average suspicion <b>${avgS.toFixed(1)}/10</b>). You are taken to Room 101.<br>
+    Final score <b>${game.score}</b>, reached level <b>${game.level}</b>.${record ? ' <b>A new best run.</b>' : ''}`,
+    '<button class="btn ok" id="gagain" type="button">TRY AGAIN</button><button class="btn" id="gquit" type="button">BACK TO BIG BROTHER</button>');
+}
+function vaporised(why) {
+  const record = recordBest();
+  sfx('buzzer'); puff('biz');
+  setStatus('Three warnings. Clerk 6079 has become an unperson.');
+  resultCard('caught', 'UNPERSON', `${why} That's your third warning: clerk 6079 never existed.<br>Final score <b>${game.score}</b>, level <b>${game.level}</b>.${record ? ' <b>A new best run.</b>' : ''}`,
+    '<button class="btn ok" id="gagain" type="button">TRY AGAIN</button><button class="btn" id="gquit" type="button">BACK TO BIG BROTHER</button>');
+}
+function endGame() {
+  if (!gameOn) return;
+  gameOn = false; game = null;
+  const p = chars.player; if (p) { release(p); delete chars.player; }
+  for (const c of Object.values(chars)) if (c.gameAway) { c.gameAway = false; c.engaged = false; c.nextAt = 0; }
+  for (const id of [...GAME_CREW, 'head']) if (chars[id] && !chars[id].serverJob) engage(chars[id], 'free');
+  for (const id of ['log', 'records', 'files', 'form']) document.getElementById(id).style.display = '';
+  document.querySelector('.talkbar').style.display = '';
+  document.getElementById('officeTitle').textContent = 'YOUR OFFICE';
+  document.getElementById('officeText').textContent = 'Winston, your Chief of Staff, reports here. Or roll your telescreen over to anyone and talk to them in person. Attach files with + FILE or drag them in.';
+  gameEl.hidden = true; gameEl.innerHTML = '';
+  document.getElementById('play').classList.remove('on'); document.getElementById('play').textContent = 'PLAY';
+  focusRoom('ceo'); setStatus(idleStatus());
+}
+gameEl.addEventListener('click', e => {
+  const id = e.target.id;
+  if (id === 'gstart' || id === 'gnext') newRound();
+  if (id === 'gsubmit') submitPitch();
+  if (id === 'gquit') endGame();
+  if (id === 'gagain') { endGame(); startGame(); }
+});
+document.getElementById('play').onclick = () => gameOn ? endGame() : startGame();
+
 // =================================================================== startup
 async function start() {
   drawStatic();
@@ -1370,13 +1775,14 @@ async function start() {
   let state;
   try { if (DEMO) throw 0; const r = await fetch('/api/state'); if (!r.ok) throw 0; state = await r.json(); }
   catch { DEMO = true; state = demo.state(); }
+  serverAI = !DEMO && !!state.ollama;
   const warn = [];
   if (!DEMO && state.version !== 7) warn.push('The black Big Brother window is still running an older version. Close it and double-click start_house.bat again, then refresh this page.');
   if (!state.ollama) warn.push("Can't reach Ollama. Open the Ollama app (llama icon by the clock), then refresh this page.");
   warn.push(...(state.warnings || []));
   document.getElementById('warn').innerHTML = warn.map(esc).join('<br>');
 
-  const you = makeChar({ id: 'you', name: 'YOU', color: '#f1a39a' }, true);
+  const you = makeChar({ id: 'you', name: 'BIG BROTHER', color: '#ff6a5a' }, true);
   place(you, 'ceo', 'you-desk');
   const deptDesks = {};
   for (const k of Object.keys(DESKS)) { const room = DESKS[k].room; (deptDesks[room] = deptDesks[room] || []).push(k); }
@@ -1400,10 +1806,10 @@ async function start() {
 
   // ordinary Party members who fill the departments (decoration, not AI)
   const CLERKS = [
-    ['jones', 'Jones', 'Engineering', 'eng-d1'], ['aaronson', 'Aaronson', 'Engineering', 'eng-d3'], ['rutherford', 'Rutherford', 'Engineering', 'eng-d4'],
-    ['withers', 'Withers', 'Academic', 'acad-d2'], ['katharine', 'Katharine', 'Academic', 'acad-d3'],
-    ['ogilvy', 'Ogilvy', 'Business', 'biz-d1'], ['bumstead', 'Bumstead', 'Business', 'biz-d2'], ['mrsparsons', 'Mrs Parsons', 'Business', 'biz-d3'],
-    ['golding', 'Golding', 'Creative', 'crea-d1'], ['ogden', 'Ogden', 'Surveillance', 'watch0'],
+    ['jones', 'Jones', 'Ministry of Peace', 'eng-d1'], ['aaronson', 'Aaronson', 'Ministry of Peace', 'eng-d3'], ['rutherford', 'Rutherford', 'Ministry of Peace', 'eng-d4'],
+    ['withers', 'Withers', 'Ministry of Truth', 'acad-d2'], ['katharine', 'Katharine', 'Ministry of Truth', 'acad-d3'],
+    ['ogilvy', 'Ogilvy', 'Ministry of Plenty', 'biz-d1'], ['bumstead', 'Bumstead', 'Ministry of Plenty', 'biz-d2'], ['mrsparsons', 'Mrs Parsons', 'Ministry of Plenty', 'biz-d3'],
+    ['golding', 'Golding', 'Ministry of Fiction', 'crea-d1'], ['ogden', 'Ogden', 'Surveillance', 'watch0'],
   ];
   const HAIR = ['#2b1d14', '#4a3324', '#7a5a3a', '#c9a66b', '#1c1a19', '#8a8580', '#5a3020'];
   const SKIN = ['#f1c9a5', '#e0b08a', '#c68a5e', '#9c6b48', '#f3d2b3', '#d9a07a'];

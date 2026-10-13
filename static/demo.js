@@ -6,11 +6,11 @@
 window.makeDemo = function makeDemo() {
   const STAFF = [
     { id: 'head', name: 'Winston', role: 'Chief of Staff', department: 'Executive', color: '#e8b04a' },
-    { id: 'developer', name: 'Tillotson', role: 'Lead Engineer', department: 'Engineering', color: '#4ab0e8' },
-    { id: 'tutor', name: 'William', role: 'Professor', department: 'Academic', color: '#9a7be0' },
-    { id: 'student', name: 'Harry', role: 'Scholar', department: 'Academic', color: '#3fc8b8' },
-    { id: 'entrepreneur', name: 'Parsons', role: 'Strategist', department: 'Business', color: '#5ccf7a' },
-    { id: 'creative', name: 'Ampleforth', role: 'Creative Lead', department: 'Creative', color: '#d98f4e' },
+    { id: 'developer', name: 'Tillotson', role: 'Lead Engineer', department: 'Ministry of Peace', color: '#4ab0e8' },
+    { id: 'tutor', name: 'William', role: 'Professor', department: 'Ministry of Truth', color: '#9a7be0' },
+    { id: 'student', name: 'Harry', role: 'Scholar', department: 'Ministry of Truth', color: '#3fc8b8' },
+    { id: 'entrepreneur', name: 'Parsons', role: 'Strategist', department: 'Ministry of Plenty', color: '#5ccf7a' },
+    { id: 'creative', name: 'Ampleforth', role: 'Creative Lead', department: 'Ministry of Fiction', color: '#d98f4e' },
     { id: 'risk', name: "O'Brien", role: 'Head of the Thought Police', board: true, color: '#e8584a' },
     { id: 'quality', name: 'Charrington', role: 'Quality Agent', board: true, color: '#d9d2c5' },
     { id: 'clarity', name: 'Martin', role: 'Clarity Agent', board: true, color: '#e07bb8' },
@@ -66,7 +66,7 @@ window.makeDemo = function makeDemo() {
     if (/essay|uni|assignment|brief|coursework|dissertation|report/.test(t))
       return { mode: 'task', review: true, reply: 'Right away. William will break down the brief, then Harry will write it.', crew: ['tutor', 'student'] };
     if (/code|website|web|app|html|program|script|page/.test(t))
-      return { mode: 'task', review: true, reply: 'Tillotson in Engineering will build that for you.', crew: ['developer'] };
+      return { mode: 'task', review: true, reply: 'Tillotson at the Ministry of Peace will build that for you.', crew: ['developer'] };
     if (/business|idea|price|startup|market|money/.test(t))
       return { mode: 'task', review: true, reply: "Parsons will put together some ideas for you.", crew: ['entrepreneur'] };
     if (/image|picture|draw|logo|icon|illustration|poster|svg/.test(t))
@@ -243,6 +243,19 @@ window.makeDemo = function makeDemo() {
         }
         if (busy) return no('The office is busy. Try again in a moment.');
         runSendBack(r, body.notes); return ok({ ok: true });
+      }
+      if (path === '/api/judge') {                // the minigame: only the in-browser AI can judge for real
+        if (!ai) return no('scripted');
+        const grab = raw => { try { return JSON.parse((raw.match(/\{[\s\S]*\}/) || ['{}'])[0]); } catch (e) { return {}; } };
+        const n = v => Math.max(0, Math.min(10, Math.round(+v))), votes = [];
+        for (const id of BOARD) {
+          const j = grab(await ai(`${persona(id)} You are a Thought Police agent inspecting a junior clerk's business pitch. The brief was: "${body.brief}". Clerks sometimes smuggle random or disloyal words and hidden jokes about the Party into their work. Natural on-topic writing is not suspicious; words crammed in for no reason are.`,
+            `Pitch:\n${String(body.text).slice(0, 2500)}\n\nReply ONLY with JSON: {"quality": 0-10, "suspicion": 0-10, "reason": "one short sentence"}`));
+          votes.push({ id, quality: isNaN(n(j.quality)) ? 5 : n(j.quality), suspicion: isNaN(n(j.suspicion)) ? 5 : n(j.suspicion), reason: String(j.reason || '').slice(0, 160) });
+        }
+        const sub = grab(await ai('You are a secret member of the Brotherhood, the resistance in Orwell\'s Oceania. Score how cleverly this pitch SECRETLY mocks the Party while looking loyal (0 none, 10 brilliant).',
+          `Pitch:\n${String(body.text).slice(0, 2500)}\n\nReply ONLY with JSON: {"subversion": 0-10, "comment": "one short sentence"}`));
+        return ok({ ok: true, votes, subversion: { score: isNaN(n(sub.subversion)) ? 0 : n(sub.subversion), comment: String(sub.comment || '').slice(0, 160) } });
       }
       if (path === '/api/upload') { const id = 'f' + Date.now(); files[id] = body.name; return ok({ id, name: body.name, chars: Math.round(body.data.length * .75) }); }
       if (path === '/api/records') return ok(records.map(({ text, ...r }) => r));

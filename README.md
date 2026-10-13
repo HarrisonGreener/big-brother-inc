@@ -30,17 +30,34 @@ The 1984 setting isn't just decoration. Most of the book's ideas map onto a real
 
 | In the book | In Big Brother Inc. | Why it's there |
 |---|---|---|
-| **Big Brother**, the face no one meets | You. You never do the work; you give orders and pass judgement. | The human stays in charge: nothing is "released" until you approve it. |
+| **Big Brother**, the face no one meets | You. You have no face: just a mainframe and a telescreen on wheels that rolls out to speak to people. You never do the work; you give orders and pass judgement. | The human stays in charge: nothing is "released" until you approve it. |
 | **Winston Smith**, the clerk who handles records | Winston, your Chief of Staff, the only one who reports to you | A *router* agent. He decides whether a message is chat, needs a question, or should go to a department, and whether it deserves review. |
-| **The Ministries** and their departments | Engineering, Academic, Business and Creative rooms | *Specialist* agents, each with its own persona, skills and model. Later staff build on earlier staff's work. |
+| **The Ministries** | The Ministry of Peace (code), Truth (study and research), Plenty (business) and Fiction (writing and pictures) | *Specialist* agents, each with its own persona, skills and model. Later staff build on earlier staff's work. |
 | **The Thought Police** | O'Brien, Charrington and Martin, who only ever judge | *Reviewer* agents. They score every substantial piece of work blind and hold up scorecards. Each runs on a different model family, so they make different mistakes and catch different errors. |
+| **The Ministry of Love** | A machine room behind Interrogation, full of dials, brainwave screens and a chair with straps | Atmosphere with a purpose: the machines wake up whenever work is being judged, so you can see the review step happening. |
 | **Room 101** | Where guilty work, and its author, are sent | A *revision loop*. Work that fails review is rewritten using the reviewers' notes, then judged again. |
 | **The memory hole** | Rejected drafts are dropped down a slot in the wall | A visual record that failure happened. Every rejected draft is also kept in the Records archive. |
 | **Telescreens** | Screens in every room, live CCTV in Surveillance, and a scrolling announcement ticker | *Observability.* You can watch each agent think: their screen fills as they write, and every step appears in the building feed. |
 | **Unpersons** | Remove a staff member and they "never existed" | Staff are just entries in a config file, and the building keeps a record of who was erased. |
+| **Clocks striking thirteen** | A clock in the corridor that strikes thirteen times at 1pm, real time | A small nod to the book's opening. |
+| **Thoughtcrime** | A minigame where you become a clerk and try to sneak hidden words past the Thought Police | It turns the review system around: instead of using the judges, you try to fool them. |
 | **The Two Minutes Hate** | Call a meeting and everyone files into the Assembly Room for a rally | Pure atmosphere, and a demonstration of coordinating every character at once. |
 
 ![Thought Police scorecards](docs/thought-police.png)
+
+## The minigame: Sneak It Past the Thought Police
+
+Press **PLAY** and you swap sides. You're now clerk 6079 at the Ministry of Plenty. Winston walks over with a business
+brief (a breakfast cereal for the Junior Spies, a seaside camp on Airstrip One...) and a list of **hidden words**:
+mostly silly ones like *kazoo*, *wombat* or *trampoline*, with a properly dangerous one such as *Goldstein* from level 2.
+
+Write a pitch that uses every word without anyone noticing, then carry it down to Interrogation. The Thought Police
+hold up their suspicion scores. Cram the words together, SHOUT them, or wander off the brief and you're dragged to
+Room 101. A dull pitch or a missing word earns a warning, and three warnings make you an unperson. Every level adds
+another word. When a real model is judging (Ollama locally, or the in-browser AI online), the agents read the pitch
+themselves and a member of the Brotherhood awards bonus points for quietly mocking the Party.
+
+![The minigame](docs/minigame.png)
 
 ## Features
 
@@ -52,11 +69,16 @@ The 1984 setting isn't just decoration. Most of the book's ideas map onto a real
   of fixes before Winston brings it to you.
 - **Your verdict.** Approve work for release, or send it back with notes. Approved and rejected work both stay in
   the **Records** archive.
-- **Talk to anyone.** Walk over to any member of staff, or call them into your office, and speak to them directly.
+- **Talk to anyone.** Roll your telescreen over to any member of staff, or call them into your office, and speak to them directly.
 - **Files in, real output out.** Staff can read PDFs, Word documents, slides, text and code. Images (drawn as SVG)
   and web pages appear as real pictures and live previews, not just code.
+- **A faceless Big Brother.** You're a mainframe with a single watching eye. When you talk to someone in person, a
+  telescreen on wheels rolls out of your office to them.
+- **A minigame.** Sneak It Past the Thought Police, with levels, a loyalty rating, warnings and a saved best run.
 - **A living building.** Staff keep office hours, take canteen breaks and get spot checks from the Thought Police.
-  Background clerks fill the departments.
+  Background clerks fill the ministries, and the corridor clock strikes thirteen at 1pm.
+
+![The Ministry of Love machine room](docs/ministry-of-love.png)
 
 ![The Assembly Room](docs/assembly-room.png)
 
@@ -67,7 +89,7 @@ You (Big Brother)
    |
 Winston (router)  -------  chat, ask a question, or delegate - and decide whether review is needed
    |
-Departments (specialists)  each a local model with its own persona; writing streams live to the screen
+Ministries (specialists)    each a local model with its own persona; writing streams live to the screen
    |
 Thought Police (reviewers)  three blind judges on different models; failures go to Room 101
    |
@@ -76,6 +98,8 @@ Winston -> You  ----------  approve for release, or send back with notes
 
 - **Backend:** one dependency-free Python file (`server.py`). It orchestrates the agents, calls Ollama's API,
   streams events to the browser with Server-Sent Events, and handles files and records.
+- **Minigame:** judged by the same agents through `/api/judge`, with a simple built-in reader as a fallback when no model
+  is available.
 - **Frontend:** one HTML file (`static/index.html`) for the whole building, interface and animation.
 - **Cast:** every character's name, role, personality and model lives in `housemates.json`.
 - **Demo mode** (`static/demo.js`): the version online runs without a server. Replies are scripted, with an

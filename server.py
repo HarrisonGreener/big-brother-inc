@@ -730,6 +730,46 @@ def direct_chat(hid, text, file_ids):
         BUS.publish({"type": "direct-done", "id": hid})
 
 
+# ---------------------------------------------------------------- the minigame: sneak it past the Thought Police
+
+JUDGE_LOCK = threading.Lock()
+
+
+def clamp10(value, default=5):
+    try:
+        return max(0, min(10, int(round(float(value)))))
+    except Exception:
+        return default
+
+
+def judge_pitch(brief, text, words):
+    """Each Thought Police agent reads a clerk's pitch: is it any good, and is something hidden in it?"""
+    votes = []
+    for v in [hid for hid, h in HOUSEMATES.items() if h.get("board")]:
+        h = HOUSEMATES[v]
+        system = (
+            f"{persona(h)}\nYou are a Thought Police agent inspecting a business pitch written by a junior clerk "
+            f"at the Ministry of Plenty. The brief from the Chief of Staff was: \"{brief}\".\n"
+            "Clerks sometimes try to smuggle odd or subversive words and hidden jokes about the Party into their work. "
+            "Judge two things: QUALITY (is it a sensible, persuasive pitch for the brief?) and SUSPICION "
+            "(do any words feel forced, out of place, random or disloyal? Is anything secretly mocking the Party?). "
+            "Natural, on-topic writing is not suspicious. Words crammed in for no reason are very suspicious.\n"
+            'Reply ONLY with JSON: {"quality": <0-10>, "suspicion": <0-10>, "reason": "one short sentence, in character"}'
+        )
+        result = parse_json(ollama_chat(v, system, text[:6000], json_mode=True))
+        votes.append({"id": v, "quality": clamp10(result.get("quality")), "suspicion": clamp10(result.get("suspicion")),
+                      "reason": str(result.get("reason", ""))[:240]})
+    system = (
+        "You are a secret member of the Brotherhood, the resistance in Orwell's Oceania. A clerk has written this "
+        f"business pitch for the brief \"{brief}\". Score how cleverly it SECRETLY mocks or undermines the Party "
+        "while still looking loyal on the surface (0 = no hidden meaning, 10 = brilliant double meaning).\n"
+        'Reply ONLY with JSON: {"subversion": <0-10>, "comment": "one short sentence"}'
+    )
+    sub = parse_json(ollama_chat(HEAD_ID, system, text[:6000], json_mode=True))
+    return {"ok": True, "votes": votes,
+            "subversion": {"score": clamp10(sub.get("subversion"), 0), "comment": str(sub.get("comment", ""))[:240]}}
+
+
 # ---------------------------------------------------------------- web server
 
 class Handler(BaseHTTPRequestHandler):
@@ -815,6 +855,24 @@ class Handler(BaseHTTPRequestHandler):
             threading.Thread(target=direct_chat, args=(hid, text or "Please look at the attached file(s).", file_ids),
                              daemon=True).start()
             return self._send(200, '{"ok": true}')
+        if self.path == "/api/judge":
+            length = int(self.headers.get("Content-Length", 0))
+            try:
+                body = json.loads(self.rfile.read(length) or b"{}")
+            except Exception:
+                body = {}
+            text = str(body.get("text", "")).strip()
+            if not text:
+                return self._send(400, '{"error": "Nothing to judge."}')
+            if HOUSE.busy or not JUDGE_LOCK.acquire(blocking=False):
+                return self._send(409, '{"error": "The Thought Police are busy. Try again in a moment."}')
+            try:
+                result = judge_pitch(str(body.get("brief", ""))[:400], text, body.get("words", []))
+            except Exception as e:
+                result = {"ok": False, "error": str(e)}
+            finally:
+                JUDGE_LOCK.release()
+            return self._send(200, json.dumps(result))
         if self.path == "/api/decision":
             length = int(self.headers.get("Content-Length", 0))
             try:
