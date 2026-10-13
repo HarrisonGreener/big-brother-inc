@@ -261,12 +261,12 @@ async function loadBrowserAI() {
   }
 }
 // =================================================================== world setup
-const W = 976, H = 640, S = 4;
+const LEFT = 160, W = 656, H = 656, S = 4;     // the map shows x from LEFT to LEFT + W: the building and its front yard
 const OFFY = 0;                                // (no extra strip any more: everything fits inside the building)
 const TOP = -OFFY, HT = H + OFFY;                 // world size in tiles-pixels, world -> image scale
 const view = document.getElementById('view');
 const vctx = view.getContext('2d');
-function layer(w = W * S, h = HT * S, shift = true) { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; if (shift) g.setTransform(1, 0, 0, 1, 0, OFFY * S); return [c, g]; }
+function layer(w = W * S, h = HT * S, shift = true) { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; if (shift) g.setTransform(1, 0, 0, 1, -LEFT * S, OFFY * S); return [c, g]; }
 function blit(g, img) { g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(img, 0, 0); g.restore(); }
 const [world, wctx] = layer();
 let G = wctx;
@@ -301,7 +301,7 @@ const ROOMS = {
   canteen: { x: 336, y: 472, w: 200, h: 112, door: 400, side: 'B', name: 'CANTEEN',                                    wall: '#6d6b62', floor: ['#8c8a80', '#848278'] },
   lobby:   { x: 544, y: 472, w: 112, h: 112, door: 600, side: 'B', name: 'LOBBY',                                      wall: '#d6d0c2', floor: ['#bdb8ad', '#b3aea3'] },
   surv:    { x: 664, y: 472, w: 136, h: 112, door: 708, side: 'B', name: 'SURVEILLANCE',                               wall: '#2c3036', floor: ['#3e4247', '#3a3e43'] },
-  yard:    { x: 808, y: 200, w: 168, h: 440, door: 600, side: 'y', name: 'YARD' },
+  yard:    { x: 168, y: 592, w: 640, h: 64,  door: 600, side: 'y', name: 'YARD' },
   corridor:{ x: 176, y: 152, w: 624, h: 32,  door: 520, side: 'c', name: 'CORRIDOR' },
 };
 // the corridor ring: walkers follow these lanes
@@ -353,8 +353,8 @@ for (const x of [376, 436, 496]) spot('canteen', 'can-b' + x, x, 276, 'sitback',
 spot('canteen', 'urn', 366, 226, 'back', 'idle'); spot('canteen', 'vend', 459, 232, 'back', 'idle');
 spot('surv', 'watch0', 508, 238, 'sitback', 'watch'); spot('surv', 'watch1', 538, 238, 'sitback', 'watch');
 spot('surv', 'surv-i', 520, 292, 'stand', 'idle');
-// the yard: benches and standing room on the grounds east of the building
-for (const [x, y, p] of [[868, 302, 'sit'], [884, 302, 'sit'], [868, 452, 'sit'], [884, 452, 'sit'], [930, 380, 'stand'], [840, 540, 'stand'], [700, 618, 'stand'], [940, 600, 'stand']])
+// the yard: benches and standing room on the forecourt
+for (const [x, y, p] of [[448, 620, 'sit'], [464, 620, 'sit'], [736, 620, 'sit'], [752, 620, 'sit'], [380, 632, 'stand'], [520, 636, 'stand'], [672, 634, 'stand'], [800, 630, 'stand']])
   spot('yard', 'yard' + x + '-' + y, x, y, p, 'idle', true);
 // Room 101
 spot('r101', 'r101', 594, 262, 'type', 'r101');
@@ -452,40 +452,22 @@ const WB = (x, y, w, h) => { px(x, y, w, h, '#8d9196'); px(x, y, w, 1, '#b3b7bc'
 // a horizontal wall from x0 to x1 with gaps [[a, b], ...]
 function wallH(x0, x1, y, gaps = []) { let x = x0; for (const [a, b] of gaps) { if (a > x) WB(x, y, a - x, 8); x = b; } if (x1 > x) WB(x, y, x1 - x, 8); }
 function wallV(x, y0, y1, gaps = []) { let y = y0; for (const [a, b] of gaps) { if (a > y) WB(x, y, 8, a - y); y = b; } if (y1 > y) WB(x, y, 8, y1 - y); }
-function deadTree(tx, ty) {
-  px(tx - 1, ty - 18, 3, 19, '#3a2e26');
-  px(tx - 6, ty - 16, 6, 1.5, '#3a2e26'); px(tx - 7, ty - 20, 2, 5, '#3a2e26'); px(tx + 1, ty - 12, 6, 1.5, '#3a2e26'); px(tx + 6, ty - 16, 2, 5, '#3a2e26');
-  px(tx - 3, ty - 24, 1.5, 6, '#3a2e26'); px(tx + 2, ty - 23, 1.5, 5, '#3a2e26');
-}
 function bench(bx, by) { px(bx, by, 32, 4, '#6b4a2f'); px(bx, by, 32, 1, '#86603e'); px(bx + 2, by + 4, 2, 3, '#3a2a1c'); px(bx + 28, by + 4, 2, 3, '#3a2a1c'); }
-const LAMPS = [[560, 600], [656, 600], [890, 240], [890, 520], [80, 520]];
+const LAMPS = [[548, 618], [652, 618], [240, 640], [760, 640]];
+const BENCHES = [[440, 622], [728, 622]];
 
 function drawStatic() {
   G = bgG;
-  // ---------------- the grounds round the building
-  px(0, 0, W, H, '#4c5d3a');
-  const rnd = seeded(11);
-  for (let i = 0; i < 2600; i++) px(rnd() * W, rnd() * H, 1, 2, rnd() > .5 ? '#5b6e45' : '#3e4d30');
-  px(160, 0, 656, 600, '#6f7172');                                         // paving round the walls
-  tiles(160, 592, 656, 48, '#77797a', '#717374', 12);                       // the front yard
-  tiles(816, 200, 140, 420, '#77797a', '#717374', 12);                      // exercise yard to the east
-  px(590, 592, 20, 48, '#8a8b8b'); for (let y = 592; y < 640; y += 6) px(590, y, 20, 1, '#7c7d7d');   // the path from the front door
-  for (let x = 0; x < W; x += 6) px(x, 636, 1, 4, '#54575a'); px(0, 636, W, 1, '#6a6d70');            // perimeter fence
-  for (let y = 0; y < H; y += 6) { px(4, y, 4, 1, '#54575a'); px(W - 8, y, 4, 1, '#54575a'); } px(6, 0, 1, H, '#6a6d70'); px(W - 7, 0, 1, H, '#6a6d70');
-  // car park with the Thought Police van
-  px(24, 260, 120, 140, '#3a3c3e'); for (let y = 270; y < 400; y += 26) px(30, y, 50, 1, '#d9d2bf');
-  px(36, 300, 56, 22, '#141518'); px(36, 300, 56, 1, '#2a2c30'); px(84, 302, 7, 18, '#22262b'); px(40, 304, 30, 2, '#7a2420');
-  px(56, 307, 12, 8, '#e8e4dc'); px(60, 308, 4, 5, '#7a2a24'); px(61, 309, 2, 3, '#0b0b0b');               // the eye on the van
-  for (const [x, y] of [[40, 322], [80, 322], [40, 298], [80, 298]]) px(x, y, 8, 3, '#0b0b0b');
-  for (const [tx, ty] of [[40, 140], [120, 80], [60, 560], [940, 120], [900, 620], [120, 620]]) deadTree(tx, ty);
-  bench(860, 304); bench(860, 454);
+  // ---------------- outside: just the concrete forecourt at the front
+  tiles(LEFT, 0, W, H, '#6f7172', '#6b6d6e', 12);
+  tiles(168, 592, 640, 64, '#77797a', '#717374', 12);
+  px(590, 592, 20, 64, '#8a8b8b'); for (let y = 592; y < 656; y += 6) px(590, y, 20, 1, '#7c7d7d');   // the path from the front doors
+  for (let x = LEFT; x < LEFT + W; x += 6) px(x, 650, 1, 6, '#3a3d40'); px(LEFT, 650, W, 1, '#54575a');   // the perimeter fence
+  for (let x = LEFT; x < LEFT + W; x += 3) px(x, 648.5, 1.5, 1, '#8d9196');                           // and its barbed wire
+  for (const [bx, by] of BENCHES) bench(bx, by);
   for (const [lx, ly] of LAMPS) { px(lx, ly - 22, 2, 22, '#2f3236'); px(lx - 2, ly - 24, 6, 3, '#2f3236'); }
-  px(820, 210, 2, 60, '#9a9a94'); px(822, 212, 18, 10, '#7a2420'); px(828, 214, 6, 5, '#e8e4dc'); px(830, 215, 2, 3, '#0b0b0b');   // the flag
-  px(570, 594, 2, 18, '#2f3236');                                           // pole for the yard telescreen
-  // the exercise yard: a platform for the morning Physical Jerks, and lines on the ground
-  px(900, 330, 40, 22, '#5a5d60'); px(900, 330, 40, 1, '#7b7f84'); text('PHYSICAL', 920, 340, 9, '#e3b341', 'center'); text('JERKS', 920, 346, 9, '#e3b341', 'center');
-  for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) px(830 + i * 30, 380 + j * 24, 6, 1, '#d9d2bf');
-
+  px(570, 600, 2, 18, '#2f3236');                                           // pole for the yard telescreen
+  poster(300, 596, 'CURFEW', 'AT 23:00'); poster(700, 596, 'REPORT', 'NEIGHBOURS');
   // ---------------- floors
   px(168, 8, 640, 584, '#3c3f43');
   for (const r of Object.values(ROOMS)) if (r.floor) tiles(r.x, r.y, r.w, r.h, r.floor[0], r.floor[1], 8);
@@ -668,7 +650,6 @@ function drawStatic() {
     px(r.x + 3, ly, w, 7, 'rgba(16,17,19,.65)');
     text(r.name, r.x + 6, ly + 5.3, size, '#d9d4c7');
   }
-  text('YARD', 900, 214, 16, '#d9d4c7', 'center');
   // corridor decoration (kept clear of all doors)
   poster(282, 153, 'THE EYE', 'SEES ALL'); poster(400, 153, 'THINK', 'CORRECTLY'); poster(650, 153, 'OUTPUT IS', 'FREEDOM'); poster(760, 153, 'REPORT', 'DOUBT');
   px(532, 154, 24, 6, '#1d1f22'); text('BB / W.SMITH', 544, 158.4, 10, '#e3b341', 'center');   // door plate
@@ -712,12 +693,12 @@ function makeChar(info, npc = false) {
 }
 
 // how to walk from the corridor ring into a room (the first point is just inside the corridor, by the door)
-const HOME = [600, 664];                                    // off the bottom of the map, beyond the front gate
+const HOME = [600, 680];                                    // off the bottom of the map, beyond the front gate
 function routeIn(room, s) {
   const r = ROOMS[room];
   const out = [[600, 468], [600, 530], [600, 598]];        // through the lobby and out of the front doors
   if (room === 'home') return [...out, HOME];
-  if (room === 'yard') return [...out, [600, 616], [s.x, 616], [s.x, s.y]];
+  if (room === 'yard') return [...out, [600, 640], [s.x, 640], [s.x, s.y]];
   if (r.side === 'c') return [[s.x, s.y]];
   if (r.side === 'w') return [[r.door, 156], [r.door, 140], ...WOFF_VIA, ...woffInner(s), [s.x, s.y]];
   if (r.side === 'n') return [[r.door, 156], [r.door, 140], [s.x, s.y]];
@@ -899,7 +880,7 @@ function captureCctv(now) {
   for (let i = 0; i < 3; i++) {
     const r = ROOMS[FEED_ROOMS[(feedShift + i * 3) % FEED_ROOMS.length]];
     cctvG.imageSmoothingEnabled = true;
-    cctvG.drawImage(world, r.x * S, (r.y + OFFY) * S, r.w * S, r.h * S, i * 60, 0, 60, 34);
+    cctvG.drawImage(world, (r.x - LEFT) * S, (r.y + OFFY) * S, r.w * S, r.h * S, i * 60, 0, 60, 34);
   }
   cctvG.fillStyle = 'rgba(40,120,100,.3)'; cctvG.fillRect(0, 0, cctv.width, cctv.height);
   cctvG.fillStyle = 'rgba(0,0,0,.25)'; for (let y = 0; y < 34; y += 2) cctvG.fillRect(0, y, cctv.width, 1);
@@ -940,7 +921,7 @@ function drawDynamic(now) {
     text(lastVerdict.avg.toFixed(1), 687, 23.2, 15, lastVerdict.ok ? '#6cc070' : '#ff6a5a', 'center');
     text(lastVerdict.ok ? 'CLEARED' : 'GUILTY', 687, 25.6, 7, '#e6e2d8', 'center');
   } else telescreen(672, 17, 30, 10, now, false);
-  telescreen(562, 588, 18, 10, now, false);                 // the yard telescreen
+  telescreen(562, 594, 18, 10, now, false);                 // the yard telescreen
   // desk monitors light up when someone works there
   for (const [k, d] of Object.entries(DESKS)) {
     const who = taken[k] && chars[taken[k]]; const on = who && who.pose === 'type' && !who.path.length;
@@ -1085,11 +1066,11 @@ function drawLight() {
   G.fillStyle = 'rgba(5,6,10,.3)'; rect(ROOMS.board); rect(ROOMS.mlove);              // the Ministry of Love wing is always dim
   G.fillStyle = meeting && meeting.phase === 'rally' ? `rgba(120,10,10,${.18 + Math.sin(performance.now() / 200) * .1})` : 'rgba(5,6,10,.28)';
   rect(ROOMS.hall);
-  if (gold) { G.fillStyle = `rgba(255,140,60,${gold * .14})`; G.fillRect(0, 0, W * S, H * S); }
+  if (gold) { G.fillStyle = `rgba(255,140,60,${gold * .14})`; G.fillRect(LEFT * S, 0, W * S, H * S); }
   if (!n) return;
   G.fillStyle = `rgba(12,16,40,${n * .32})`; G.fillRect(168 * S, 8 * S, 640 * S, 584 * S);
   G.fillStyle = `rgba(8,10,30,${n * .62})`;
-  G.fillRect(0, 0, 168 * S, H * S); G.fillRect(808 * S, 0, (W - 808) * S, H * S); G.fillRect(168 * S, 592 * S, 640 * S, (H - 592) * S); G.fillRect(168 * S, 0, 640 * S, 8 * S);
+  G.fillRect(LEFT * S, 0, 8 * S, H * S); G.fillRect(808 * S, 0, 8 * S, H * S); G.fillRect(168 * S, 592 * S, 640 * S, (H - 592) * S); G.fillRect(168 * S, 0, 640 * S, 8 * S);
   G.globalCompositeOperation = 'lighter';
   for (const [lx, ly] of LAMPS) glow(lx + 1, ly - 22, 34, 'rgba(255,200,120,A)', .35 * n);
   glow(520, 22, 40, 'rgba(127,212,193,A)', .2 * n);
@@ -1105,7 +1086,7 @@ function updateClock() {
 }
 
 // =================================================================== camera: zoom and pan
-const cam = { x: W / 2, y: (TOP + H) / 2, z: 1, tx: W / 2, ty: (TOP + H) / 2, tz: 1, follow: false };
+const cam = { x: LEFT + W / 2, y: (TOP + H) / 2, z: 1, tx: LEFT + W / 2, ty: (TOP + H) / 2, tz: 1, follow: false };
 function fitZ() { return Math.min(view.width / W, view.height / H); }
 function resize() {
   const dpr = window.devicePixelRatio || 1;
@@ -1119,7 +1100,7 @@ function resize() {
 function clampCam() {
   cam.tz = Math.max(fitZ(), Math.min(fitZ() * 5, cam.tz));
   const vw = view.width / cam.tz, vh = view.height / cam.tz;
-  cam.tx = vw >= W ? W / 2 : Math.max(vw / 2, Math.min(W - vw / 2, cam.tx));
+  cam.tx = vw >= W ? LEFT + W / 2 : Math.max(LEFT + vw / 2, Math.min(LEFT + W - vw / 2, cam.tx));
   cam.ty = vh >= HT ? TOP + HT / 2 : Math.max(TOP + vh / 2, Math.min(H - vh / 2, cam.ty));
 }
 function focusRoom(key) {
@@ -1385,11 +1366,11 @@ function frame(now) {
   if (cam.follow && chars.head && !chars.head.hidden) { cam.tx = chars.head.x; cam.ty = chars.head.y - 10; clampCam(); }
   cam.x += (cam.tx - cam.x) * Math.min(1, dt * 8); cam.y += (cam.ty - cam.y) * Math.min(1, dt * 8); cam.z += (cam.tz - cam.z) * Math.min(1, dt * 8);
   const vw = view.width / cam.z, vh = view.height / cam.z;
-  const vx0 = vw >= W ? (W - vw) / 2 : Math.max(0, Math.min(W - vw, cam.x - vw / 2)), vy0 = vh >= HT ? TOP + (HT - vh) / 2 : Math.max(TOP, Math.min(H - vh, cam.y - vh / 2));
+  const vx0 = vw >= W ? LEFT + (W - vw) / 2 : Math.max(LEFT, Math.min(LEFT + W - vw, cam.x - vw / 2)), vy0 = vh >= HT ? TOP + (HT - vh) / 2 : Math.max(TOP, Math.min(H - vh, cam.y - vh / 2));
   vctx.imageSmoothingEnabled = cam.z < S;
   vctx.fillStyle = '#000'; vctx.fillRect(0, 0, view.width, view.height);
-  const ix = Math.max(0, vx0), iy = Math.max(TOP, vy0), iw = Math.min(W, vx0 + vw) - ix, ih = Math.min(H, vy0 + vh) - iy;   // the part of the world in view
-  vctx.drawImage(world, ix * S, (iy + OFFY) * S, iw * S, ih * S, (ix - vx0) * cam.z, (iy - vy0) * cam.z, iw * cam.z, ih * cam.z);
+  const ix = Math.max(LEFT, vx0), iy = Math.max(TOP, vy0), iw = Math.min(LEFT + W, vx0 + vw) - ix, ih = Math.min(H, vy0 + vh) - iy;   // the part of the world in view
+  vctx.drawImage(world, (ix - LEFT) * S, (iy + OFFY) * S, iw * S, ih * S, (ix - vx0) * cam.z, (iy - vy0) * cam.z, iw * cam.z, ih * cam.z);
   requestAnimationFrame(frame);
 }
 
