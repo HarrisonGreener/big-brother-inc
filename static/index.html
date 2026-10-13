@@ -590,7 +590,7 @@ let workingId = null, busy = false;
 const BOARD_IDS = [];
 function hourNow() { const d = new Date(); return d.getHours() + d.getMinutes() / 60; }
 function hash(s) { let h = 0; for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) % 9973; return h / 9973; }
-function workHours(c) { const h = hourNow(); return h >= c.arrive && h < c.leave; }
+function workHours(c) { if (DEMO) return true; const h = hourNow(); return h >= c.arrive && h < c.leave; }   // the demo office never closes
 
 function makeChar(info, npc = false) {
   const c = {
