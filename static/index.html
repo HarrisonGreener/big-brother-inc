@@ -261,8 +261,8 @@ async function loadBrowserAI() {
   }
 }
 // =================================================================== world setup
-const W = 760, H = 360, S = 4;
-const OFFY = 64;                               // extra strip north of the building (the Ministry of Love annex)
+const W = 976, H = 640, S = 4;
+const OFFY = 0;                                // (no extra strip any more: everything fits inside the building)
 const TOP = -OFFY, HT = H + OFFY;                 // world size in tiles-pixels, world -> image scale
 const view = document.getElementById('view');
 const vctx = view.getContext('2d');
@@ -283,32 +283,43 @@ function text(str, x, y, size, color, align = 'left') {
 }
 
 // =================================================================== the building
-// North wing (above the corridor) and south wing (below it). Every room has one door onto the corridor.
+// A ring corridor loops round the Assembly Room in the middle. Four wings sit outside it:
+// the Ministries (west), Big Brother's power wing (north), the Ministry of Love wing (east) and the common rooms (south).
+// side: n = door in its bottom wall onto the top corridor, B = door in its top wall onto the bottom corridor,
+//       L / R = door in its side wall onto the west / east corridor, m = door in its bottom wall onto the bottom corridor.
 const ROOMS = {
-  eng:     { x: 16,  y: 16,  w: 152, h: 128, door: 92,  side: 'n', name: 'MINISTRY OF PEACE',    dept: 'Ministry of Peace', color: '#3d5872', wall: '#384a5c', floor: ['#4a5560', '#46515b'] },
-  woff:    { x: 176, y: 16,  w: 44,  h: 128, door: 284, side: 'w', name: "WINSTON'S OFFICE",                           wall: '#3b2b26', floor: ['#4f3a2c', '#4a3628'] },
-  ceo:     { x: 224, y: 16,  w: 120, h: 128, door: 284, side: 'n', name: "BIG BROTHER'S OFFICE",                       wall: '#4a2f2a', floor: ['#5a3a2a', '#553627'] },
-  board:   { x: 352, y: 16,  w: 136, h: 128, door: 420, side: 'n', name: 'INTERROGATION',                              wall: '#2a2c30', floor: ['#3a3d42', '#36393e'] },
-  acad:    { x: 496, y: 16,  w: 128, h: 128, door: 560, side: 'n', name: 'MINISTRY OF TRUTH',    dept: 'Ministry of Truth', color: '#57456e', wall: '#4d3d5e', floor: ['#6b5340', '#654e3c'] },
-  biz:     { x: 16,  y: 192, w: 120, h: 112, door: 76,  side: 's', name: 'MINISTRY OF PLENTY',   dept: 'Ministry of Plenty', color: '#3f5e45', wall: '#3c5240', floor: ['#4f5a50', '#4b564c'] },
-  crea:    { x: 144, y: 192, w: 152, h: 112, door: 220, side: 's', name: 'MINISTRY OF FICTION',  dept: 'Ministry of Fiction', color: '#6e5038', wall: '#5e4632', floor: ['#8a7a64', '#84745e'] },
-  lobby:   { x: 304, y: 192, w: 32,  h: 112, door: 320, side: 's', name: 'LOBBY',                                      wall: '#d6d0c2', floor: ['#bdb8ad', '#b3aea3'] },
-  canteen: { x: 344, y: 192, w: 128, h: 112, door: 408, side: 's', name: 'CANTEEN',                                    wall: '#6d6b62', floor: ['#8c8a80', '#848278'] },
-  surv:    { x: 480, y: 192, w: 80,  h: 112, door: 496, side: 's', name: 'SURVEILLANCE',                               wall: '#2c3036', floor: ['#3e4247', '#3a3e43'] },
-  r101:    { x: 568, y: 192, w: 56,  h: 112, door: 596, side: 's', name: 'ROOM 101',                                   wall: '#3a1a18', floor: ['#3b3331', '#362f2d'] },
-  mlove:   { x: 352, y: -56, w: 136, h: 64,  door: 470, side: 'x', name: 'MINISTRY OF LOVE',                           wall: '#1d1416', floor: ['#2e2a2c', '#2a2628'] },
-  hall:    { x: 632, y: 16,  w: 120, h: 288, door: 620, side: 'e', name: 'THE ASSEMBLY ROOM',                         wall: '#2a1414', floor: ['#3a3532', '#35302d'] },
-  yard:    { x: 0,   y: 312, w: 760, h: 48,  door: 320, side: 'y', name: 'YARD' },
-  corridor:{ x: 16,  y: 152, w: 608, h: 32,  door: 288, side: 'c', name: 'CORRIDOR' },
+  eng:     { x: 176, y: 16,  w: 152, h: 128, door: 252, side: 'n', name: 'MINISTRY OF PEACE',    dept: 'Ministry of Peace', color: '#3d5872', wall: '#384a5c', floor: ['#4a5560', '#46515b'] },
+  woff:    { x: 336, y: 16,  w: 44,  h: 128, door: 520, side: 'w', name: "WINSTON'S OFFICE",                           wall: '#3b2b26', floor: ['#4f3a2c', '#4a3628'] },
+  ceo:     { x: 384, y: 16,  w: 272, h: 128, door: 520, side: 'n', name: "BIG BROTHER'S OFFICE",                       wall: '#4a2f2a', floor: ['#5a3a2a', '#553627'] },
+  board:   { x: 664, y: 16,  w: 136, h: 128, door: 732, side: 'n', name: 'INTERROGATION',                              wall: '#2a2c30', floor: ['#3a3d42', '#36393e'] },
+  acad:    { x: 176, y: 192, w: 152, h: 112, door: 248, side: 'L', name: 'MINISTRY OF TRUTH',    dept: 'Ministry of Truth', color: '#57456e', wall: '#4d3d5e', floor: ['#6b5340', '#654e3c'] },
+  biz:     { x: 176, y: 312, w: 152, h: 112, door: 368, side: 'L', name: 'MINISTRY OF PLENTY',   dept: 'Ministry of Plenty', color: '#3f5e45', wall: '#3c5240', floor: ['#4f5a50', '#4b564c'] },
+  hall:    { x: 376, y: 192, w: 240, h: 232, door: 496, side: 'm', name: 'THE ASSEMBLY ROOM',                          wall: '#2a1414', floor: ['#3a3532', '#35302d'] },
+  mlove:   { x: 664, y: 192, w: 136, h: 112, door: 248, side: 'R', name: 'MINISTRY OF LOVE',                           wall: '#1d1416', floor: ['#2e2a2c', '#2a2628'] },
+  r101:    { x: 664, y: 312, w: 136, h: 112, door: 368, side: 'R', name: 'ROOM 101',                                   wall: '#3a1a18', floor: ['#3b3331', '#362f2d'] },
+  crea:    { x: 176, y: 472, w: 152, h: 112, door: 252, side: 'B', name: 'MINISTRY OF FICTION',  dept: 'Ministry of Fiction', color: '#6e5038', wall: '#5e4632', floor: ['#8a7a64', '#84745e'] },
+  canteen: { x: 336, y: 472, w: 200, h: 112, door: 400, side: 'B', name: 'CANTEEN',                                    wall: '#6d6b62', floor: ['#8c8a80', '#848278'] },
+  lobby:   { x: 544, y: 472, w: 112, h: 112, door: 600, side: 'B', name: 'LOBBY',                                      wall: '#d6d0c2', floor: ['#bdb8ad', '#b3aea3'] },
+  surv:    { x: 664, y: 472, w: 136, h: 112, door: 708, side: 'B', name: 'SURVEILLANCE',                               wall: '#2c3036', floor: ['#3e4247', '#3a3e43'] },
+  yard:    { x: 808, y: 200, w: 168, h: 440, door: 600, side: 'y', name: 'YARD' },
+  corridor:{ x: 176, y: 152, w: 624, h: 32,  door: 520, side: 'c', name: 'CORRIDOR' },
 };
-const CORRIDOR_Y = 180;
-const MEMORY_HOLES = { eng: [144, 19], acad: [562, 19], biz: [120, 194], crea: [180, 194], woff: [178, 19], board: [400, 19] };
-const WOFF_VIA = [[248, 102], [222, 102], [204, 102]];   // through the internal door
-const woffInner = p => p.y < 58 ? [[214, 64], [214, 34]] : [];   // round the side of Winston's desk
+// the corridor ring: walkers follow these lanes
+const LANE = { top: 180, bottom: 460, left: 352, right: 640, x0: 184, x1: 792 };
+const CORRIDOR_Y = LANE.top;
+// Most rooms were first drawn somewhere else on an older map; SHIFT moves their contents into place.
+const SHIFT = { eng: [160, 0], woff: [160, 0], ceo: [236, 0], board: [312, 0], acad: [-308, 176], biz: [176, 120], crea: [32, 280],
+                canteen: [-8, 280], surv: [212, 280], r101: [136, 120], mlove: [312, 248], hall: [0, 0], lobby: [0, 0], yard: [0, 0], corridor: [0, 0] };
+const sx = (room, x) => x + (SHIFT[room] || [0, 0])[0], sy = (room, y) => y + (SHIFT[room] || [0, 0])[1];
+const MEMORY_HOLES = Object.fromEntries(Object.entries({ eng: [144, 19], acad: [562, 19], biz: [120, 194], crea: [180, 194], woff: [178, 19], board: [400, 19] })
+  .map(([k, [x, y]]) => [k, [sx(k, x), sy(k, y)]]));
+const WOFF_VIA = [[408, 102], [382, 102], [364, 102]];   // through the internal door from your office
+const woffInner = p => p.y < 58 ? [[374, 64], [374, 34]] : [];   // round the side of Winston's desk
 const DEPT_ROOM = { 'Ministry of Peace': 'eng', 'Ministry of Truth': 'acad', 'Ministry of Plenty': 'biz', 'Ministry of Fiction': 'crea', Surveillance: 'surv' };
 
 const SPOTS = [];
-function spot(room, key, x, y, pose, use) { SPOTS.push({ room, key, x, y, pose, use }); }
+// spots are written in each room's old coordinates and shifted into place (abs = true for new, absolute positions)
+function spot(room, key, x, y, pose, use, abs = false) { SPOTS.push({ room, key, x: abs ? x : sx(room, x), y: abs ? y : sy(room, y), pose, use }); }
 // your office
 spot('ceo', 'max-report', 284, 104, 'back', 'winston');
 spot('ceo', 'you-desk', 284, 67, 'stand', 'you');
@@ -321,36 +332,38 @@ spot('board', 'max-board', 374, 120, 'stand', 'winston');
 // department desks: [room, desk x, desk y-row for people]
 const DESKS = {};
 function deskSpot(room, key, x, y) {
-  DESKS[key] = { room, x, y };
+  DESKS[key] = { room, x: sx(room, x), y: sy(room, y), ox: x, oy: y };
   spot(room, key, x, y, 'type', 'desk');
   spot(room, 'brief-' + key, x + 16, y + 6, 'back', 'brief');
 }
 deskSpot('eng', 'eng-d0', 44, 64); deskSpot('eng', 'eng-d1', 92, 64); deskSpot('eng', 'eng-d2', 140, 64);
 deskSpot('eng', 'eng-d3', 44, 108); deskSpot('eng', 'eng-d4', 124, 108);
-deskSpot('acad', 'acad-d2', 524, 108); deskSpot('acad', 'acad-d3', 596, 108);
+deskSpot('acad', 'acad-d2', 524, 102); deskSpot('acad', 'acad-d3', 596, 102);
 deskSpot('biz', 'biz-d2', 40, 292); deskSpot('biz', 'biz-d3', 108, 292);
-deskSpot('acad', 'acad-d0', 530, 66); deskSpot('acad', 'acad-d1', 588, 66);
+deskSpot('acad', 'acad-d0', 530, 62); deskSpot('acad', 'acad-d1', 588, 62);
 deskSpot('biz', 'biz-d0', 40, 250); deskSpot('biz', 'biz-d1', 108, 250);
 deskSpot('crea', 'crea-d0', 172, 250); deskSpot('crea', 'crea-d1', 264, 250);
 // relaxing spots
 spot('eng', 'eng-i1', 40, 132, 'stand', 'idle'); spot('eng', 'eng-i2', 136, 136, 'back', 'idle');
-spot('acad', 'acad-i1', 518, 130, 'stand', 'idle'); spot('acad', 'acad-i2', 606, 136, 'back', 'idle');
-spot('biz', 'biz-i1', 30, 296, 'stand', 'idle'); spot('biz', 'biz-i2', 112, 294, 'stand', 'idle');
+spot('acad', 'acad-i1', 584, 122, 'stand', 'idle'); spot('acad', 'acad-i2', 616, 124, 'back', 'idle');
+spot('biz', 'biz-i1', 30, 296, 'stand', 'idle'); spot('biz', 'biz-i2', 128, 300, 'stand', 'idle');
 spot('crea', 'crea-i1', 204, 296, 'back', 'idle'); spot('crea', 'crea-i2', 248, 296, 'back', 'idle');
-for (const x of [366, 386, 426, 446]) spot('canteen', 'can-t' + x, x, 255, 'sit', 'idle');
-for (const x of [376, 436]) spot('canteen', 'can-b' + x, x, 276, 'sitback', 'idle');
+for (const x of [366, 386, 426, 446, 486, 506]) spot('canteen', 'can-t' + x, x, 255, 'sit', 'idle');
+for (const x of [376, 436, 496]) spot('canteen', 'can-b' + x, x, 276, 'sitback', 'idle');
 spot('canteen', 'urn', 366, 226, 'back', 'idle'); spot('canteen', 'vend', 459, 232, 'back', 'idle');
 spot('surv', 'watch0', 508, 238, 'sitback', 'watch'); spot('surv', 'watch1', 538, 238, 'sitback', 'watch');
 spot('surv', 'surv-i', 520, 292, 'stand', 'idle');
-for (const [x, y, p] of [[108, 336, 'sit'], [124, 336, 'sit'], [516, 336, 'sit'], [532, 336, 'sit'], [220, 348, 'stand'], [420, 348, 'stand'], [40, 350, 'stand'], [600, 350, 'stand']])
-  spot('yard', 'yard' + x, x, y, p, 'idle');
+// the yard: benches and standing room on the grounds east of the building
+for (const [x, y, p] of [[868, 302, 'sit'], [884, 302, 'sit'], [868, 452, 'sit'], [884, 452, 'sit'], [930, 380, 'stand'], [840, 540, 'stand'], [700, 618, 'stand'], [940, 600, 'stand']])
+  spot('yard', 'yard' + x + '-' + y, x, y, p, 'idle', true);
 // Room 101
 spot('r101', 'r101', 594, 262, 'type', 'r101');
 spot('r101', 'r101-w', 578, 290, 'stand', 'winston');
 spot('surv', 'brief-watch0', 522, 244, 'back', 'brief');
+// the Assembly Room: rows of seats facing the big screen, with an aisle up the middle
 const HALL_SEATS = [];
-for (let i = 0; i < 10; i++) for (const [side, x] of [['L', 670], ['R', 714]]) { const k = `hall-${side}${i}`; spot('hall', k, x, 82 + i * 18, 'sitback', 'meeting'); HALL_SEATS.push(k); }
-spot('hall', 'hall-head', 692, 290, 'sitback', 'you');
+for (let row = 0; row < 5; row++) for (const x of [412, 436, 460, 532, 556, 580]) { const k = `hall-${row}-${x}`; spot('hall', k, x, 276 + row * 26, 'sitback', 'meeting', true); HALL_SEATS.push(k); }
+spot('hall', 'hall-head', 496, 240, 'stand', 'you', true);
 
 const spotByKey = Object.fromEntries(SPOTS.map(s => [s.key, s]));
 const taken = {};
@@ -432,178 +445,219 @@ function shelf(x, y, w, h) {
     px(x + 1 + i * 4, y + 1 + r * 6, 3, 4, ['#7a2d26', '#3d4a5c', '#c9b27a', '#2f4a3a', '#5e4a6e'][(r * 3 + i) % 5]);
 }
 
+// draw a room's furniture in its old coordinates, shifted into its new place
+function at(room, fn) { const [dx, dy] = SHIFT[room] || [0, 0]; G.save(); G.translate(dx * S, dy * S); fn(); G.restore(); }
+const od = k => ({ x: DESKS[k].ox, y: DESKS[k].oy });
+const WB = (x, y, w, h) => { px(x, y, w, h, '#8d9196'); px(x, y, w, 1, '#b3b7bc'); px(x, y + h - 2, w, 2, '#5f6368'); };
+// a horizontal wall from x0 to x1 with gaps [[a, b], ...]
+function wallH(x0, x1, y, gaps = []) { let x = x0; for (const [a, b] of gaps) { if (a > x) WB(x, y, a - x, 8); x = b; } if (x1 > x) WB(x, y, x1 - x, 8); }
+function wallV(x, y0, y1, gaps = []) { let y = y0; for (const [a, b] of gaps) { if (a > y) WB(x, y, 8, a - y); y = b; } if (y1 > y) WB(x, y, 8, y1 - y); }
+function deadTree(tx, ty) {
+  px(tx - 1, ty - 18, 3, 19, '#3a2e26');
+  px(tx - 6, ty - 16, 6, 1.5, '#3a2e26'); px(tx - 7, ty - 20, 2, 5, '#3a2e26'); px(tx + 1, ty - 12, 6, 1.5, '#3a2e26'); px(tx + 6, ty - 16, 2, 5, '#3a2e26');
+  px(tx - 3, ty - 24, 1.5, 6, '#3a2e26'); px(tx + 2, ty - 23, 1.5, 5, '#3a2e26');
+}
+function bench(bx, by) { px(bx, by, 32, 4, '#6b4a2f'); px(bx, by, 32, 1, '#86603e'); px(bx + 2, by + 4, 2, 3, '#3a2a1c'); px(bx + 28, by + 4, 2, 3, '#3a2a1c'); }
+const LAMPS = [[560, 600], [656, 600], [890, 240], [890, 520], [80, 520]];
+
 function drawStatic() {
   G = bgG;
-  px(0, TOP, W, HT, '#1a1d1c');
-  tiles(0, TOP, W, OFFY + 8, '#2a2d2f', '#27292b', 16);                          // rooftops north of the building
-  // ---------------- the yard outside
-  tiles(0, 312, W, 48, '#77797a', '#717374', 12);
+  // ---------------- the grounds round the building
+  px(0, 0, W, H, '#4c5d3a');
   const rnd = seeded(11);
-  for (const [gx, gy, gw, gh] of [[0, 322, 90, 34], [670, 322, 90, 34], [150, 344, 120, 12], [370, 344, 120, 12], [520, 344, 120, 12]]) {
-    px(gx, gy, gw, gh, '#4c5d3a');
-    for (let i = 0; i < gw * gh / 22; i++) px(gx + rnd() * (gw - 1), gy + rnd() * (gh - 2), 1, 2, rnd() > .5 ? '#5b6e45' : '#3e4d30');
-  }
-  px(310, 312, 20, 48, '#8a8b8b'); for (let y = 312; y < 360; y += 6) px(310, y, 20, 1, '#7c7d7d');
-  for (let x = 0; x < W; x += 6) px(x, 356, 1, 4, '#54575a'); px(0, 356, W, 1, '#6a6d70');
-  for (const bx of [100, 508]) { px(bx, 330, 32, 4, '#6b4a2f'); px(bx, 330, 32, 1, '#86603e'); px(bx + 2, 334, 2, 3, '#3a2a1c'); px(bx + 28, 334, 2, 3, '#3a2a1c'); }
-  for (const [tx, ty] of [[30, 344], [730, 344], [180, 336], [460, 336], [600, 336]]) {
-    px(tx - 1, ty - 18, 3, 19, '#3a2e26');                                                // dead trees
-    px(tx - 6, ty - 16, 6, 1.5, '#3a2e26'); px(tx - 7, ty - 20, 2, 5, '#3a2e26'); px(tx + 1, ty - 12, 6, 1.5, '#3a2e26'); px(tx + 6, ty - 16, 2, 5, '#3a2e26');
-    px(tx - 3, ty - 24, 1.5, 6, '#3a2e26'); px(tx + 2, ty - 23, 1.5, 5, '#3a2e26');
-  }
-  for (const lx of [262, 376]) { px(lx, 318, 2, 22, '#2f3236'); px(lx - 2, 316, 6, 3, '#2f3236'); }
-  px(360, 326, 2, 18, '#2f3236');
+  for (let i = 0; i < 2600; i++) px(rnd() * W, rnd() * H, 1, 2, rnd() > .5 ? '#5b6e45' : '#3e4d30');
+  px(160, 0, 656, 600, '#6f7172');                                         // paving round the walls
+  tiles(160, 592, 656, 48, '#77797a', '#717374', 12);                       // the front yard
+  tiles(816, 200, 140, 420, '#77797a', '#717374', 12);                      // exercise yard to the east
+  px(590, 592, 20, 48, '#8a8b8b'); for (let y = 592; y < 640; y += 6) px(590, y, 20, 1, '#7c7d7d');   // the path from the front door
+  for (let x = 0; x < W; x += 6) px(x, 636, 1, 4, '#54575a'); px(0, 636, W, 1, '#6a6d70');            // perimeter fence
+  for (let y = 0; y < H; y += 6) { px(4, y, 4, 1, '#54575a'); px(W - 8, y, 4, 1, '#54575a'); } px(6, 0, 1, H, '#6a6d70'); px(W - 7, 0, 1, H, '#6a6d70');
+  // car park with the Thought Police van
+  px(24, 260, 120, 140, '#3a3c3e'); for (let y = 270; y < 400; y += 26) px(30, y, 50, 1, '#d9d2bf');
+  px(36, 300, 56, 22, '#141518'); px(36, 300, 56, 1, '#2a2c30'); px(84, 302, 7, 18, '#22262b'); px(40, 304, 30, 2, '#7a2420');
+  px(56, 307, 12, 8, '#e8e4dc'); px(60, 308, 4, 5, '#7a2a24'); px(61, 309, 2, 3, '#0b0b0b');               // the eye on the van
+  for (const [x, y] of [[40, 322], [80, 322], [40, 298], [80, 298]]) px(x, y, 8, 3, '#0b0b0b');
+  for (const [tx, ty] of [[40, 140], [120, 80], [60, 560], [940, 120], [900, 620], [120, 620]]) deadTree(tx, ty);
+  bench(860, 304); bench(860, 454);
+  for (const [lx, ly] of LAMPS) { px(lx, ly - 22, 2, 22, '#2f3236'); px(lx - 2, ly - 24, 6, 3, '#2f3236'); }
+  px(820, 210, 2, 60, '#9a9a94'); px(822, 212, 18, 10, '#7a2420'); px(828, 214, 6, 5, '#e8e4dc'); px(830, 215, 2, 3, '#0b0b0b');   // the flag
+  px(570, 594, 2, 18, '#2f3236');                                           // pole for the yard telescreen
+  // the exercise yard: a platform for the morning Physical Jerks, and lines on the ground
+  px(900, 330, 40, 22, '#5a5d60'); px(900, 330, 40, 1, '#7b7f84'); text('PHYSICAL', 920, 340, 9, '#e3b341', 'center'); text('JERKS', 920, 346, 9, '#e3b341', 'center');
+  for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) px(830 + i * 30, 380 + j * 24, 6, 1, '#d9d2bf');
 
   // ---------------- floors
-  px(8, 8, W - 16, 304, '#3c3f43');
+  px(168, 8, 640, 584, '#3c3f43');
   for (const r of Object.values(ROOMS)) if (r.floor) tiles(r.x, r.y, r.w, r.h, r.floor[0], r.floor[1], 8);
-  tiles(16, 152, 616, 32, '#5d6266', '#585d61', 8);                  // corridor
-  px(16, 178, 616, 4, '#6e3a35'); px(16, 178, 616, 1, '#8a4a43');    // red runner
+  for (const [x, y, w, h] of [[176, 152, 624, 32], [176, 432, 624, 32], [336, 184, 32, 248], [624, 184, 32, 248]]) tiles(x, y, w, h, '#5d6266', '#585d61', 8);
+  for (const [x, y, w, h] of [[176, 178, 624, 4], [176, 458, 624, 4], [350, 182, 4, 278], [638, 182, 4, 278]]) { px(x, y, w, h, '#6e3a35'); px(x, y, w, 1, '#8a4a43'); }   // red runners
   // department floor colour strips by the door
-  for (const r of Object.values(ROOMS)) if (r.dept) px(r.x, r.side === 'n' ? r.y + r.h - 3 : r.y + 12, r.w, 3, r.color);
+  for (const r of Object.values(ROOMS)) if (r.dept) {
+    if (r.side === 'n') px(r.x, r.y + r.h - 3, r.w, 3, r.color);
+    else if (r.side === 'L') px(r.x + r.w - 3, r.y + 12, 3, r.h - 12, r.color);
+    else px(r.x, r.y + 12, r.w, 3, r.color);
+  }
 
   // ---------------- wall faces (the part you see)
   for (const r of Object.values(ROOMS)) {
     if (!r.wall || r === ROOMS.lobby) continue;
     const fy = r.y, fh = 12;
     px(r.x, fy, r.w, fh, r.wall); px(r.x, fy + fh - 2, r.w, 2, shade(r.wall, .6));
-    if (r.side === 's') { px(r.door - 8, fy, 16, fh, '#1e2022'); px(r.door - 8, fy, 1, fh, '#4a4d52'); px(r.door + 7, fy, 1, fh, '#4a4d52'); }
+    if (r.side === 'B') { px(r.door - 8, fy, 16, fh, '#1e2022'); px(r.door - 8, fy, 1, fh, '#4a4d52'); px(r.door + 7, fy, 1, fh, '#4a4d52'); }
   }
-  // corridor face: the bottom wall of the north rooms, with door openings
-  px(16, 152, 608, 14, '#4e5a57'); px(16, 152, 608, 1, '#66736f'); for (let x = 16; x < 624; x += 24) px(x, 152, 1, 12, '#46514e');
-  px(16, 164, 608, 2, '#2c3132');
-  for (const r of [ROOMS.eng, ROOMS.ceo, ROOMS.board, ROOMS.acad]) { px(r.door - 8, 152, 16, 14, '#2a2d30'); px(r.door - 8, 165, 16, 1, '#5d6266'); }
+  // corridor faces: the walls you see on the north side of each corridor, with door openings
+  const face = (x0, x1, y, doors) => {
+    px(x0, y, x1 - x0, 14, '#4e5a57'); px(x0, y, x1 - x0, 1, '#66736f'); for (let x = x0; x < x1; x += 24) px(x, y, 1, 12, '#46514e');
+    px(x0, y + 12, x1 - x0, 2, '#2c3132');
+    for (const d of doors) { px(d - 8, y, 16, 14, '#2a2d30'); px(d - 8, y + 13, 16, 1, '#5d6266'); }
+  };
+  face(176, 800, 152, [ROOMS.eng.door, ROOMS.ceo.door, ROOMS.board.door]);
+  face(176, 336, 432, []); face(368, 624, 432, [ROOMS.hall.door]); face(656, 800, 432, []);
 
   // ---------------- wall blocks (tops)
-  const WB = (x, y, w, h) => { px(x, y, w, h, '#8d9196'); px(x, y, w, 1, '#b3b7bc'); px(x, y + h - 2, w, 2, '#5f6368'); };
-  WB(344, TOP, 152, 8); WB(344, TOP, 8, OFFY + 8); WB(488, TOP, 8, OFFY + 8);   // the Ministry of Love annex
-  WB(8, 8, W - 16, 8); WB(8, 8, 8, 304); WB(624, 8, 8, 144); WB(624, 184, 8, 128); WB(W - 8, 8, 8, 304);
-  for (const x of [168, 344, 488]) WB(x, 8, 8, 144);
-  WB(220, 16, 4, 78); WB(220, 110, 4, 34);                            // Winston's office partition, with a doorway
-  for (const x of [136, 296, 336, 472, 560]) WB(x, 184, 8, 128);
-  // bottom wall of the north rooms (doors cut out)
-  let x0 = 8;
-  for (const r of [ROOMS.eng, ROOMS.ceo, ROOMS.board, ROOMS.acad]) { WB(x0, 144, r.door - 8 - x0, 8); x0 = r.door + 8; }
-  WB(x0, 144, 632 - x0, 8);
-  // top wall of the south rooms (lobby open)
-  x0 = 8;
-  for (const r of [ROOMS.biz, ROOMS.crea, ROOMS.canteen, ROOMS.surv, ROOMS.r101]) {
-    if (r === ROOMS.canteen) { WB(x0, 184, 304 - x0, 8); x0 = 336; }
-    WB(x0, 184, r.door - 8 - x0, 8); x0 = r.door + 8;
-  }
-  WB(x0, 184, 632 - x0, 8);
-  // outer bottom wall with glass doors
-  WB(8, 304, 304, 8); WB(328, 304, W - 336, 8);
-  px(312, 304, 16, 8, '#9fc4c9'); px(319, 304, 2, 8, '#5d7d82');
-  // Room 101's heavy door frame
-  px(588, 184, 16, 8, '#2a1210'); px(588, 184, 16, 1, '#5a2a24');
+  WB(168, 8, 640, 8); WB(168, 8, 8, 584); WB(800, 8, 8, 584);
+  wallH(168, 808, 584, [[592, 608]]);                                         // outer bottom wall with the glass front doors
+  px(592, 584, 16, 8, '#9fc4c9'); px(599, 584, 2, 8, '#5d7d82');
+  WB(328, 8, 8, 144); WB(656, 8, 8, 144);                                     // north wing
+  WB(380, 16, 4, 78); WB(380, 110, 4, 34);                                    // Winston's partition, with a doorway
+  wallH(168, 808, 144, [ROOMS.eng, ROOMS.ceo, ROOMS.board].map(r => [r.door - 8, r.door + 8]));
+  wallH(168, 808, 184, [[336, 368], [624, 656]]);                             // the ring's inner and outer walls
+  wallH(168, 808, 424, [[336, 368], [488, 504], [624, 656]]);
+  wallV(328, 184, 432, [[240, 256], [360, 376]]); wallV(368, 184, 432); wallV(616, 184, 432); wallV(656, 184, 432, [[240, 256], [360, 376]]);
+  WB(168, 304, 168, 8); WB(656, 304, 152, 8);
+  wallH(168, 808, 464, [[244, 260], [392, 408], [544, 656], [700, 716]]);     // south wing (the lobby is open)
+  WB(328, 464, 8, 128); WB(536, 464, 8, 128); WB(656, 464, 8, 128);
+  // side doors: dark gaps in the walls
+  for (const r of [ROOMS.acad, ROOMS.biz]) { px(328, r.door - 8, 8, 16, '#2a2d30'); px(334, r.door - 8, 2, 16, '#5d6266'); }
+  for (const r of [ROOMS.mlove, ROOMS.r101]) { px(656, r.door - 8, 8, 16, '#2a2d30'); px(656, r.door - 8, 2, 16, '#5d6266'); }
+  px(656, 360, 8, 16, '#2a1210'); px(656, 360, 8, 1, '#5a2a24'); px(656, 375, 8, 1, '#5a2a24');   // Room 101's heavy door
+  px(656, 240, 8, 16, '#3a3d42'); for (const ry of [243, 252]) px(658, ry, 4, 1, '#8d9196');      // the sealed steel door to the Ministry of Love
 
-  // ---------------- Engineering
-  const E = ROOMS.eng;
-  px(24, 18, 44, 9, '#dedbd2'); px(24, 18, 44, 1, '#9a9a94');                         // whiteboard with code
-  for (let i = 0; i < 4; i++) px(27, 20 + i * 2, 8 + (i * 13) % 26, 1, ['#3d5872', '#c23b30', '#3d5872', '#2f6b3f'][i]);
-  poster(84, 17, 'CODE IS', 'ORDER'); poster(118, 17, 'ERRORS ARE', 'CRIMES');
-  for (const k of ['eng-d0', 'eng-d1', 'eng-d2']) { const d = DESKS[k]; desk(d.x - 16, 36, 32, 14, '#7b7e83'); chairTop(d.x, d.y + 3); px(d.x + 9, 39, 5, 4, '#d9d2bf'); }
-  for (let i = 0; i < 3; i++) { px(148, 84 + i * 18, 14, 16, '#202326'); px(148, 84 + i * 18, 14, 1, '#3a3d42'); }
-  plant(24, 140);
-  // ---------------- Big Brother's office
-  px(228, 18, 14, 10, '#7a2420'); px(326, 18, 14, 10, '#7a2420');                          // banners
-  plant(234, 48); plant(234, 140); plant(336, 140); plant(336, 48);
-  px(256, 70, 56, 62, '#6e2420'); px(258, 72, 52, 58, '#7d2b26'); px(256, 70, 56, 1, '#a2433a');   // rug
-  // a leather sofa and low table in the corner
-  px(226, 106, 3, 16, '#3a1410'); px(253, 106, 3, 16, '#3a1410');
-  px(229, 106, 24, 7, '#4a1c18'); px(229, 106, 24, 1, '#6e2a24');
-  px(229, 113, 24, 8, '#6e2a24'); px(240, 113, 1, 8, '#4a1c18'); px(229, 113, 24, 1, '#8a3a32');
-  px(232, 127, 18, 6, '#3b2519'); px(232, 127, 18, 1, '#5a3a26'); px(236, 128, 4, 2, '#d9d2bf'); px(243, 128, 3, 3, '#c9d6c2');
-  // drinks cabinet with Victory Gin
-  px(326, 32, 15, 20, '#3b2519'); px(326, 32, 15, 1, '#5a3a26'); px(333, 34, 1, 16, '#2a1a10');
+  // ---------------- Ministry of Peace
+  at('eng', () => {
+    px(24, 18, 44, 9, '#dedbd2'); px(24, 18, 44, 1, '#9a9a94');                         // whiteboard with code
+    for (let i = 0; i < 4; i++) px(27, 20 + i * 2, 8 + (i * 13) % 26, 1, ['#3d5872', '#c23b30', '#3d5872', '#2f6b3f'][i]);
+    poster(84, 17, 'CODE IS', 'ORDER'); poster(118, 17, 'ERRORS ARE', 'CRIMES');
+    for (const k of ['eng-d0', 'eng-d1', 'eng-d2']) { const d = od(k); desk(d.x - 16, 36, 32, 14, '#7b7e83'); chairTop(d.x, d.y + 3); px(d.x + 9, 39, 5, 4, '#d9d2bf'); }
+    for (let i = 0; i < 3; i++) { px(148, 84 + i * 18, 14, 16, '#202326'); px(148, 84 + i * 18, 14, 1, '#3a3d42'); }
+  });
+  // ---------------- Big Brother's office: sofa on the left, the mainframe in the middle, drinks and globe on the right
+  at('woff', () => {
+    px(228, 18, 14, 10, '#7a2420');                                                        // banner
+    px(226, 106, 3, 16, '#3a1410'); px(253, 106, 3, 16, '#3a1410');                        // a leather sofa and low table
+    px(229, 106, 24, 7, '#4a1c18'); px(229, 106, 24, 1, '#6e2a24');
+    px(229, 113, 24, 8, '#6e2a24'); px(240, 113, 1, 8, '#4a1c18'); px(229, 113, 24, 1, '#8a3a32');
+    px(232, 127, 18, 6, '#3b2519'); px(232, 127, 18, 1, '#5a3a26'); px(236, 128, 4, 2, '#d9d2bf'); px(243, 128, 3, 3, '#c9d6c2');
+  });
+  // a map of the three superstates on the wall
+  px(408, 22, 52, 22, '#d9d2bf'); px(408, 22, 52, 1, '#8a8478'); px(412, 26, 16, 12, '#7a2420'); px(430, 25, 12, 15, '#3d5872'); px(444, 28, 12, 10, '#6e6b3e');
+  text('OCEANIA', 420, 42.6, 7, '#2a1d1a', 'center');
+  at('ceo', () => {
+    px(256, 70, 56, 62, '#6e2420'); px(258, 72, 52, 58, '#7d2b26'); px(256, 70, 56, 1, '#a2433a');   // rug
+    px(238, 46, 6, 8, '#3b2519'); px(240, 38, 2, 8, '#2a2c30'); px(237, 35, 8, 4, '#c9b27a');   // reading lamp
+    px(252, 28, 64, 15, '#202226'); px(252, 28, 64, 1, '#3a3d42'); px(252, 42, 64, 1, '#121315');   // the mainframe
+    for (let i = 0; i < 4; i++) {
+      const x0 = 255 + i * 16; px(x0, 30, 12, 11, '#2c2f34');
+      for (const dx of [3, 9]) { G.fillStyle = '#121315'; G.beginPath(); G.arc((x0 + dx) * S, 33.5 * S, 2.2 * S, 0, 7); G.fill(); G.fillStyle = '#7b7f84'; G.beginPath(); G.arc((x0 + dx) * S, 33.5 * S, .7 * S, 0, 7); G.fill(); }
+      px(x0 + 1, 38, 10, 2, '#151719');
+    }
+  });
+  G.save(); G.translate(312 * S, 0);
+  px(326, 18, 14, 10, '#7a2420');                                                          // banner
+  px(326, 32, 15, 20, '#3b2519'); px(326, 32, 15, 1, '#5a3a26'); px(333, 34, 1, 16, '#2a1a10');   // drinks cabinet with Victory Gin
   for (let i = 0; i < 3; i++) { px(328 + i * 4, 27, 2, 5, '#c9d6c2'); px(328 + i * 4, 26, 2, 1, '#7a2420'); }
-  // a globe on a stand
-  px(330, 112, 8, 8, '#3d5872'); px(331, 113, 3, 3, '#4f6f8a'); px(333, 120, 2, 6, '#6b4a2f'); px(330, 126, 8, 2, '#6b4a2f');
-  // reading lamp beside your desk
-  px(238, 46, 6, 8, '#3b2519'); px(240, 38, 2, 8, '#2a2c30'); px(237, 35, 8, 4, '#c9b27a');
-  // the mainframe: Big Brother has no face, only machinery
-  px(252, 28, 64, 15, '#202226'); px(252, 28, 64, 1, '#3a3d42'); px(252, 42, 64, 1, '#121315');
-  for (let i = 0; i < 4; i++) {
-    const x0 = 255 + i * 16; px(x0, 30, 12, 11, '#2c2f34');
-    for (const dx of [3, 9]) { G.fillStyle = '#121315'; G.beginPath(); G.arc((x0 + dx) * S, 33.5 * S, 2.2 * S, 0, 7); G.fill(); G.fillStyle = '#7b7f84'; G.beginPath(); G.arc((x0 + dx) * S, 33.5 * S, .7 * S, 0, 7); G.fill(); }
-    px(x0 + 1, 38, 10, 2, '#151719');
-  }
+  px(330, 112, 8, 8, '#3d5872'); px(331, 113, 3, 3, '#4f6f8a'); px(333, 120, 2, 6, '#6b4a2f'); px(330, 126, 8, 2, '#6b4a2f');   // globe
+  G.restore();
   // ---------------- Winston's office
-  poster(187, 17, 'SERVE', 'THE EYE');
-  px(186, 26, 14, 11, '#3b2b26'); px(187, 27, 12, 9, '#4f3a30');                         // Winston's chair, against the wall
+  at('woff', () => { poster(187, 17, 'SERVE', 'THE EYE'); px(186, 26, 14, 11, '#3b2b26'); px(187, 27, 12, 9, '#4f3a30'); });
   // ---------------- Interrogation
-  // (no filing cabinets)
-  poster(423, 17, 'DOUBT IS', 'DISLOYAL'); px(446, 17, 36, 9, '#151a1d'); px(447, 18, 34, 7, '#233036');                          // one-way mirror
-  for (const x of [390, 420, 450]) { px(x - 6, 56, 12, 10, '#202226'); px(x - 6, 56, 12, 1, '#2f3237'); }
-  chairTop(420, 113, '#2a2c30');
-  px(464, 120, 16, 12, '#3a3d42'); px(466, 116, 12, 5, '#45484d');
-  // ---------------- Academic
-  shelf(500, 17, 34, 10); poster(539, 17, 'WORDS ARE', 'WEAPONS'); px(572, 17, 46, 10, '#24302a'); px(573, 18, 44, 8, '#2f4a3a');  // shelves + chalkboard
-  for (let i = 0; i < 3; i++) px(576, 19 + i * 2.5, 8 + i * 8, 1, '#e8e4dc');
-  desk(512, 38, 36, 16, '#6b4a2f'); px(512, 38, 36, 1, '#86603e'); px(536, 41, 6, 5, '#c9b27a');   // the Professor's desk
-  desk(572, 40, 32, 14, '#7b7e83');
-  chairTop(530, 69, '#4a2f22'); chairTop(588, 69);
-  px(610, 124, 8, 8, '#3d5872'); px(613, 132, 2, 4, '#6b4a2f'); px(610, 136, 8, 2, '#6b4a2f');   // globe
-  // ---------------- Business
-  px(22, 193, 42, 10, '#dedbd2'); for (let i = 0; i < 5; i++) px(26 + i * 7, 201 - i * 1.6, 4, 1 + i * 1.6, ['#c23b30', '#e3b341', '#6cc070', '#3d5872', '#6cc070'][i]);
-  poster(96, 193, 'PLENTY', 'FOR ALL');
-  for (const k of ['biz-d0', 'biz-d1']) { const d = DESKS[k]; desk(d.x - 16, 222, 32, 14, '#7b7e83'); chairTop(d.x, d.y + 3); px(d.x + 9, 225, 5, 4, '#d9d2bf'); }
-  plant(126, 300);
-  // ---------------- Creative
-  poster(150, 193, 'ART SERVES', 'THE EYE'); poster(258, 193, 'IMAGINE', 'LESS');
-  for (const k of ['crea-d0', 'crea-d1']) { const d = DESKS[k]; desk(d.x - 16, 222, 32, 14, '#8a6a4a'); chairTop(d.x, d.y + 3); }
-  for (const ex of [204, 248]) { px(ex - 1, 268, 2, 22, '#6b4a2f'); px(ex - 8, 266, 16, 13, '#ece8de'); px(ex - 6, 268, 6, 5, '#c23b30'); px(ex, 272, 6, 5, '#3d5872'); }
-  px(280, 284, 2, 12, '#2b2d31'); px(276, 280, 10, 5, '#1b1d21');
-  // ---------------- Lobby
-  plant(310, 300); plant(332, 300);
-  px(308, 236, 24, 14, '#cfc8b8'); text('BB', 320, 246, 22, '#7a2420', 'center');
+  at('board', () => {
+    poster(423, 17, 'DOUBT IS', 'DISLOYAL'); px(446, 17, 36, 9, '#151a1d'); px(447, 18, 34, 7, '#233036');   // one-way mirror
+    for (const x of [390, 420, 450]) { px(x - 6, 56, 12, 10, '#202226'); px(x - 6, 56, 12, 1, '#2f3237'); }
+    chairTop(420, 113, '#2a2c30');
+    px(464, 120, 16, 12, '#3a3d42'); px(466, 116, 12, 5, '#45484d');
+  });
+  // ---------------- Ministry of Truth
+  at('acad', () => {
+    shelf(500, 17, 34, 10); poster(539, 17, 'WORDS ARE', 'WEAPONS'); px(572, 17, 46, 10, '#24302a'); px(573, 18, 44, 8, '#2f4a3a');
+    for (let i = 0; i < 3; i++) px(576, 19 + i * 2.5, 8 + i * 8, 1, '#e8e4dc');
+    desk(512, 34, 36, 16, '#6b4a2f'); px(512, 34, 36, 1, '#86603e'); px(536, 37, 6, 5, '#c9b27a');   // the Professor's desk
+    desk(572, 36, 32, 14, '#7b7e83');
+    chairTop(530, 65, '#4a2f22'); chairTop(588, 65);
+    px(612, 40, 8, 8, '#3d5872'); px(615, 48, 2, 4, '#6b4a2f'); px(612, 52, 8, 2, '#6b4a2f');      // globe
+  });
+  // ---------------- Ministry of Plenty
+  at('biz', () => {
+    px(22, 193, 42, 10, '#dedbd2'); for (let i = 0; i < 5; i++) px(26 + i * 7, 201 - i * 1.6, 4, 1 + i * 1.6, ['#c23b30', '#e3b341', '#6cc070', '#3d5872', '#6cc070'][i]);
+    poster(96, 193, 'PLENTY', 'FOR ALL');
+    for (const k of ['biz-d0', 'biz-d1']) { const d = od(k); desk(d.x - 16, 222, 32, 14, '#7b7e83'); chairTop(d.x, d.y + 3); px(d.x + 9, 225, 5, 4, '#d9d2bf'); }
+  });
+  // ---------------- Ministry of Fiction
+  at('crea', () => {
+    poster(150, 193, 'ART SERVES', 'THE EYE'); poster(258, 193, 'IMAGINE', 'LESS');
+    for (const k of ['crea-d0', 'crea-d1']) { const d = od(k); desk(d.x - 16, 222, 32, 14, '#8a6a4a'); chairTop(d.x, d.y + 3); }
+    for (const ex of [204, 248]) { px(ex - 1, 268, 2, 22, '#6b4a2f'); px(ex - 8, 266, 16, 13, '#ece8de'); px(ex - 6, 268, 6, 5, '#c23b30'); px(ex, 272, 6, 5, '#3d5872'); }
+    px(280, 284, 2, 12, '#2b2d31'); px(276, 280, 10, 5, '#1b1d21');
+  });
+  // ---------------- Lobby: the entrance hall
+  px(588, 512, 24, 14, '#cfc8b8'); px(588, 512, 24, 1, '#e8e4dc'); text('BB', 600, 522, 22, '#7a2420', 'center');   // plaque on a plinth
+  px(592, 526, 16, 6, '#8d8a80');
+  for (const bx of [552, 628]) { px(bx, 540, 20, 5, '#6b4a2f'); px(bx, 540, 20, 1, '#86603e'); }   // waiting benches
+  px(548, 490, 22, 14, '#2a2c30'); text('ROOMS', 559, 495.5, 7, '#e3b341', 'center');
+  for (let i = 0; i < 3; i++) px(551, 497 + i * 2.2, 16, .8, '#9a9a94');                            // directory board
+  px(630, 486, 20, 10, '#7a2420'); px(632, 488, 16, 6, '#5a1a16');                                  // reception desk
   // ---------------- Canteen
-  poster(372, 193, 'EAT. WORK.', 'OBEY.'); poster(424, 193, 'WORK IS', 'LOYALTY');
-  desk(350, 206, 46, 10, '#9a9a94'); px(360, 202, 8, 8, '#b5b5ad'); px(362, 200, 4, 2, '#7d7d77');
-  px(452, 204, 14, 22, '#7a2420'); px(453, 206, 12, 13, '#2b1c1c'); px(453, 221, 12, 3, '#3a3d42');
+  at('canteen', () => {
+    poster(372, 193, 'EAT. WORK.', 'OBEY.'); poster(424, 193, 'WORK IS', 'LOYALTY'); poster(500, 193, 'VICTORY', 'TASTES');
+    desk(350, 206, 46, 10, '#9a9a94'); px(360, 202, 8, 8, '#b5b5ad'); px(362, 200, 4, 2, '#7d7d77');
+    px(452, 204, 14, 22, '#7a2420'); px(453, 206, 12, 13, '#2b1c1c'); px(453, 221, 12, 3, '#3a3d42');
+    text('VICTORY', 459, 225, 9, '#f2e6c9', 'center');
+    for (let i = 0; i < 3; i++) { px(372 + i * 4, 207, 2, 6, '#c9d6c2'); px(372 + i * 4, 206, 2, 1, '#7a2420'); }
+    text('VICTORY GIN', 385, 215.2, 8, '#2a1d1a', 'center');
+    px(355, 211, 10, 3, '#7a2420'); text('V', 360, 213.7, 8, '#f2e6c9', 'center');
+  });
   // ---------------- Surveillance
-  desk(500, 210, 56, 8, '#4a4d52');
-  for (const x of [508, 538]) chairTop(x, 241, '#202226');
+  at('surv', () => { desk(500, 210, 56, 8, '#4a4d52'); for (const x of [508, 538]) chairTop(x, 241, '#202226'); });
   // ---------------- Room 101
-  px(595, 204, 2, 8, '#2a2c30');                                                         // bulb cord
-  px(574, 194, 16, 8, '#1b1d21'); for (let i = 0; i < 4; i++) px(575 + i * 4, 194, 1, 8, '#6b6f74');   // barred vent
-  desk(580, 236, 28, 12, '#5d6168');                                                     // the steel desk
-  px(587, 238, 11, 6, '#2a2c30'); px(588, 239, 9, 2, '#9a9a94'); px(590, 233, 5, 5, '#f4f1ea');   // typewriter and page
-  chairTop(594, 265, '#3a1a18');
-  px(613, 252, 6, 12, '#3a3d42'); px(611, 263, 10, 2, '#2a2c30');                       // the cage stand, right beside the chair
-  text('101', 596, 191, 15, '#e6e2d8', 'center');
-
+  at('r101', () => {
+    px(595, 204, 2, 8, '#2a2c30');                                                         // bulb cord
+    px(574, 194, 16, 8, '#1b1d21'); for (let i = 0; i < 4; i++) px(575 + i * 4, 194, 1, 8, '#6b6f74');   // barred vent
+    desk(580, 236, 28, 12, '#5d6168');                                                     // the steel desk
+    px(587, 238, 11, 6, '#2a2c30'); px(588, 239, 9, 2, '#9a9a94'); px(590, 233, 5, 5, '#f4f1ea');
+    chairTop(594, 265, '#3a1a18');
+    px(613, 252, 6, 12, '#3a3d42'); px(611, 263, 10, 2, '#2a2c30');                       // the cage stand
+  });
+  text('101', 732, 310.6, 15, '#e6e2d8', 'center');
   // ---------------- memory holes (where rejected drafts go)
   for (const [x, y] of Object.values(MEMORY_HOLES)) {
     px(x, y, 8, 6, '#3a3d42'); px(x + 1, y + 1, 6, 4, '#0b0c0d'); px(x + 1, y + 2, 6, 1, '#1b1d21');
     text('MEMORY', x + 4, y + 8.6, 6, '#c9c6bd', 'center');
   }
-  // ---------------- Victory products in the canteen
-  text('VICTORY', 459, 225, 9, '#f2e6c9', 'center');
-  for (let i = 0; i < 3; i++) { px(372 + i * 4, 207, 2, 6, '#c9d6c2'); px(372 + i * 4, 206, 2, 1, '#7a2420'); }
-  text('VICTORY GIN', 385, 215.2, 8, '#2a1d1a', 'center');
-  px(355, 211, 10, 3, '#7a2420'); text('V', 360, 213.7, 8, '#f2e6c9', 'center');
   // ---------------- the Ministry of Love machine room
-  px(462, 8, 16, 8, '#3a3d42'); px(463, 9, 14, 6, '#4a4d52'); for (const rx of [464, 475]) for (const ry of [10, 13]) px(rx, ry, 1, 1, '#8d9196');   // sealed steel door
-  for (let i = 0; i < 3; i++) { px(442 + i * 15, -56, 13, 22, '#24272b'); px(442 + i * 15, -56, 13, 1, '#3a3d42'); for (let j = 0; j < 3; j++) { px(444 + i * 15, -50 + j * 5, 4, 3, '#151719'); px(450 + i * 15, -50 + j * 5, 3, 3, '#3a3d42'); } }   // machine banks
-  px(362, -32, 30, 18, '#3a3d42'); px(362, -32, 30, 1, '#5d6168'); px(364, -30, 26, 12, '#24272b');   // O'Brien's dial console
-  px(386, -44, 2, 12, '#6b6f74'); px(384, -46, 6, 3, '#c23b30');                                       // the lever
-  px(406, -30, 28, 16, '#4a4d52'); px(408, -28, 24, 12, '#5d6168'); px(410, -36, 20, 7, '#4a4d52');    // the reclined chair
-  for (const sy of [-25, -20]) px(406, sy, 28, 1.4, '#3a2416');                                         // straps
-  px(414, -40, 12, 5, '#7b7f84'); px(415, -39, 10, 2, '#9aa0a6');                                      // the headset
-  for (let i = 0; i < 4; i++) px(426 + i * 4, -41 + i * .5, 4, .7, '#1b1d21');                          // wires to the machines
-  px(416, -6, 8, 3, '#1b1d21'); for (let i = 0; i < 4; i++) px(417 + i * 2, -6, .6, 3, '#3a3d42');      // drain
-  // ---------------- the Assembly Room
-  px(638, 44, 108, 8, '#1d1f22'); px(638, 44, 108, 1, '#3a3d42');                       // stage under the screen
-  for (const x of [636, 744]) { px(x, 18, 6, 28, '#1b1d21'); for (let j = 0; j < 4; j++) px(x + 1, 21 + j * 6, 4, 4, '#2a2c30'); }   // speakers
-  for (const [x, y] of [[640, 70], [740, 70], [640, 170], [740, 170]]) { px(x, y, 8, 40, '#7a2420'); px(x + 2, y + 16, 4, 4, '#e8e4dc'); px(x + 3, y + 17, 2, 2, '#1b1d21'); }   // eye banners
-  desk(684, 66, 16, 188, '#3b2519'); px(684, 66, 1, 188, '#5a3a26');                 // the long table
-  for (let i = 0; i < 10; i++) { px(686, 82 + i * 18 - 8, 5, 4, '#d9d2bf'); px(694, 82 + i * 18 - 6, 4, 3, '#d9d2bf'); }
-  for (const k of HALL_SEATS) { const sp = spotByKey[k]; chairTop(sp.x, sp.y + 3, '#2a2c30'); }
-  px(684, 282, 16, 12, '#4a1c18'); px(686, 284, 12, 9, '#5e2520');                    // your high-backed chair at the head
+  at('mlove', () => {
+    for (let i = 0; i < 3; i++) { px(442 + i * 15, -56, 13, 22, '#24272b'); px(442 + i * 15, -56, 13, 1, '#3a3d42'); for (let j = 0; j < 3; j++) { px(444 + i * 15, -50 + j * 5, 4, 3, '#151719'); px(450 + i * 15, -50 + j * 5, 3, 3, '#3a3d42'); } }
+    px(362, -32, 30, 18, '#3a3d42'); px(362, -32, 30, 1, '#5d6168'); px(364, -30, 26, 12, '#24272b');   // the dial console
+    px(386, -44, 2, 12, '#6b6f74'); px(384, -46, 6, 3, '#c23b30');                                       // the lever
+    px(406, -30, 28, 16, '#4a4d52'); px(408, -28, 24, 12, '#5d6168'); px(410, -36, 20, 7, '#4a4d52');    // the reclined chair
+    for (const sy of [-25, -20]) px(406, sy, 28, 1.4, '#3a2416');                                         // straps
+    px(414, -40, 12, 5, '#7b7f84'); px(415, -39, 10, 2, '#9aa0a6');                                      // the headset
+    for (let i = 0; i < 4; i++) px(426 + i * 4, -41 + i * .5, 4, .7, '#1b1d21');                          // wires
+    px(416, 40, 8, 3, '#1b1d21'); for (let i = 0; i < 4; i++) px(417 + i * 2, 40, .6, 3, '#3a3d42');      // drain
+    // the memory store: tape banks that hold every thought ever corrected
+    for (let i = 0; i < 4; i++) {
+      const x0 = 400 + i * 20; px(x0, 18, 16, 22, '#202226'); px(x0, 18, 16, 1, '#3a3d42');
+      for (const dy of [23, 31]) { G.fillStyle = '#121315'; G.beginPath(); G.arc((x0 + 8) * S, dy * S, 3 * S, 0, 7); G.fill(); G.fillStyle = '#7b7f84'; G.beginPath(); G.arc((x0 + 8) * S, dy * S, .9 * S, 0, 7); G.fill(); }
+    }
+    px(362, 4, 30, 12, '#3a3d42'); px(364, 6, 26, 8, '#24272b'); text('LOVE', 377, 12, 9, '#c23b30', 'center');   // a padded bench
+  });
+  // ---------------- the Assembly Room: rows of seats facing the big screen
+  px(436, 220, 120, 8, '#1d1f22'); px(436, 220, 120, 1, '#3a3d42');                       // stage under the screen
+  for (const x of [426, 560]) { px(x, 194, 6, 28, '#1b1d21'); for (let j = 0; j < 4; j++) px(x + 1, 197 + j * 6, 4, 4, '#2a2c30'); }   // speakers
+  for (const [x, y] of [[382, 236], [602, 236], [382, 330], [602, 330]]) { px(x, y, 8, 40, '#7a2420'); px(x + 2, y + 16, 4, 4, '#e8e4dc'); px(x + 3, y + 17, 2, 2, '#1b1d21'); }   // eye banners
+  px(489, 232, 14, 192, '#6e2420'); px(489, 232, 1, 192, '#8a3a32'); px(502, 232, 1, 192, '#8a3a32');   // red carpet up the aisle
+  for (const k of HALL_SEATS) { const sp = spotByKey[k]; chairTop(sp.x, sp.y + 3, '#5a4038'); }
   // ---------------- the extra desks for the clerks
-  for (const k of ['eng-d3', 'eng-d4', 'acad-d2', 'acad-d3', 'biz-d2', 'biz-d3']) { const d = DESKS[k]; desk(d.x - 16, d.y - 28, 32, 14, '#7b7e83'); chairTop(d.x, d.y + 3); px(d.x + 9, d.y - 25, 5, 4, '#d9d2bf'); }
+  for (const k of ['eng-d3', 'eng-d4', 'acad-d2', 'acad-d3', 'biz-d2', 'biz-d3']) at(DESKS[k].room, () => { const d = od(k); desk(d.x - 16, d.y - 28, 32, 14, '#7b7e83'); chairTop(d.x, d.y + 3); px(d.x + 9, d.y - 25, 5, 4, '#d9d2bf'); });
   // ---------------- room labels
   for (const r of Object.values(ROOMS)) {
     if (r === ROOMS.yard || r === ROOMS.lobby || r === ROOMS.corridor) continue;
@@ -614,21 +668,27 @@ function drawStatic() {
     px(r.x + 3, ly, w, 7, 'rgba(16,17,19,.65)');
     text(r.name, r.x + 6, ly + 5.3, size, '#d9d4c7');
   }
+  text('YARD', 900, 214, 16, '#d9d4c7', 'center');
   // corridor decoration (kept clear of all doors)
-  poster(110, 153, 'THE EYE', 'SEES ALL'); poster(200, 153, 'THINK', 'CORRECTLY'); poster(460, 153, 'OUTPUT IS', 'FREEDOM'); poster(590, 153, 'REPORT', 'DOUBT');
-  px(306, 154, 24, 6, '#1d1f22'); text('BB / W.SMITH', 318, 158.4, 10, '#e3b341', 'center');   // door plate
+  poster(282, 153, 'THE EYE', 'SEES ALL'); poster(400, 153, 'THINK', 'CORRECTLY'); poster(650, 153, 'OUTPUT IS', 'FREEDOM'); poster(760, 153, 'REPORT', 'DOUBT');
+  px(532, 154, 24, 6, '#1d1f22'); text('BB / W.SMITH', 544, 158.4, 10, '#e3b341', 'center');   // door plate
+  poster(220, 433, 'WORK IS', 'LOYALTY'); poster(420, 433, 'THE EYE', 'NEVER BLINKS'); poster(540, 433, 'OBEY', 'GLADLY'); poster(760, 433, 'SILENCE', 'IS SAFE');
+  px(482, 434, 28, 6, '#1d1f22'); text('ASSEMBLY', 496, 438.4, 9, '#e3b341', 'center');
 
   // ---------------- foreground pieces (people sit behind these)
   G = fgG;
-  desk(179, 41, 28, 13, '#5a3a26'); px(185, 42, 9, 5, '#2a2c30'); px(186, 43, 7, 2, '#9a9a94');                  // Winston's desk + typewriter
-  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) px(197 + i * 2.6, 43 + j * 2.6, 2.6, 2.6, (i + j) % 2 ? '#e8e4dc' : '#c9b27a');   // snakes and ladders
-  px(198, 44, .6, 5, '#3f8a3a'); px(200, 44, .6, 5, '#3f8a3a'); px(203, 44, .8, 2, '#c23b30'); px(204, 46, .8, 2, '#c23b30');
-  desk(250, 44, 68, 16, '#3b2519'); px(250, 44, 68, 1, '#5a3a26');               // your desk
-  px(254, 46, 20, 5, '#2a2c30'); for (let i = 0; i < 6; i++) for (let j = 0; j < 2; j++) px(255 + i * 3, 47 + j * 2, 2, 1.2, '#9a9a94');   // console keys
-  px(298, 46, 14, 4, '#c9b27a'); text('B.B.', 305, 49.3, 9, '#2a1d1a', 'center');
-  desk(376, 66, 88, 14, '#6b6e73');                                              // interrogation table
-  px(414, 70, 12, 7, '#d9d2bf'); px(415, 71, 10, 1, '#2a2c30'); px(415, 73, 7, 1, '#2a2c30');
-  for (const [x0t] of [[356], [416]]) { desk(x0t, 252, 44, 8, '#a8a69c'); for (let x = x0t + 4; x < x0t + 42; x += 12) px(x, 253, 6, 3, '#d9d2bf'); }
+  at('woff', () => {
+    desk(179, 41, 28, 13, '#5a3a26'); px(185, 42, 9, 5, '#2a2c30'); px(186, 43, 7, 2, '#9a9a94');                  // Winston's desk + typewriter
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) px(197 + i * 2.6, 43 + j * 2.6, 2.6, 2.6, (i + j) % 2 ? '#e8e4dc' : '#c9b27a');   // snakes and ladders
+    px(198, 44, .6, 5, '#3f8a3a'); px(200, 44, .6, 5, '#3f8a3a'); px(203, 44, .8, 2, '#c23b30'); px(204, 46, .8, 2, '#c23b30');
+  });
+  at('ceo', () => {
+    desk(250, 44, 68, 16, '#3b2519'); px(250, 44, 68, 1, '#5a3a26');               // your desk
+    px(254, 46, 20, 5, '#2a2c30'); for (let i = 0; i < 6; i++) for (let j = 0; j < 2; j++) px(255 + i * 3, 47 + j * 2, 2, 1.2, '#9a9a94');   // console keys
+    px(298, 46, 14, 4, '#c9b27a'); text('B.B.', 305, 49.3, 9, '#2a1d1a', 'center');
+  });
+  at('board', () => { desk(376, 66, 88, 14, '#6b6e73'); px(414, 70, 12, 7, '#d9d2bf'); px(415, 71, 10, 1, '#2a2c30'); px(415, 73, 7, 1, '#2a2c30'); });
+  at('canteen', () => { for (const x0t of [356, 416, 476]) { desk(x0t, 252, 44, 8, '#a8a69c'); for (let x = x0t + 4; x < x0t + 42; x += 12) px(x, 253, 6, 3, '#d9d2bf'); } });
   G = wctx;
 }
 
@@ -644,44 +704,107 @@ function makeChar(info, npc = false) {
   const c = {
     id: info.id, name: info.name, role: info.role || '', color: info.color || '#888', board: !!info.board, dept: info.department,
     look: LOOKS[info.id] || { hair: '#333', skin: '#e0b08a', pants: '#3d4f7a', style: 'short' },
-    x: 320, y: 380, pose: 'stand', path: [], loc: 'home', spotKey: null, hidden: true, engaged: false,
+    x: 600, y: 664, pose: 'stand', path: [], loc: 'home', spotKey: null, hidden: true, engaged: false,
     nextAt: 0, t: Math.random() * 5, emote: null, npc, deskKey: null,
     arrive: 7.25 + hash(info.id) * 1.5, leave: 18 + hash(info.id + 'x') * 1.75,
   };
   return (chars[c.id] = c);
 }
 
-// how to walk from the corridor into a room
+// how to walk from the corridor ring into a room (the first point is just inside the corridor, by the door)
+const HOME = [600, 664];                                    // off the bottom of the map, beyond the front gate
 function routeIn(room, s) {
   const r = ROOMS[room];
-  if (room === 'home') return [[320, 188], [320, 250], [320, 300], [320, 318], [320, 380]];
-  if (room === 'yard') return [[320, 188], [320, 250], [320, 300], [320, 318], [s.x, s.y]];
+  const out = [[600, 468], [600, 530], [600, 598]];        // through the lobby and out of the front doors
+  if (room === 'home') return [...out, HOME];
+  if (room === 'yard') return [...out, [600, 616], [s.x, 616], [s.x, s.y]];
   if (r.side === 'c') return [[s.x, s.y]];
-  if (r.side === 'e') return [[628, 180], [644, 180], [648, 272], ...(s.x > 692 ? [[714, 272]] : []), [s.x, s.y]];
-  if (r.side === 'w') return [[284, 156], [284, 140], ...WOFF_VIA, ...woffInner(s), [s.x, s.y]];
+  if (r.side === 'w') return [[r.door, 156], [r.door, 140], ...WOFF_VIA, ...woffInner(s), [s.x, s.y]];
   if (r.side === 'n') return [[r.door, 156], [r.door, 140], [s.x, s.y]];
-  return [[r.door, 188], [r.door, 198], [s.x, s.y]];
+  if (r.side === 'm') return [[r.door, 436], [r.door, 420], [r.door, s.y], [s.x, s.y]];   // up the aisle, then along the row
+  if (r.side === 'L') return [[340, r.door], [318, r.door], [s.x, s.y]];
+  if (r.side === 'R') return [[652, r.door], [674, r.door], [s.x, s.y]];
+  return [[r.door, 468], [r.door, 480], [s.x, s.y]];      // 'B': the south wing
 }
-function doorX(room) { return room === 'home' || room === 'yard' ? 320 : ROOMS[room].door; }
-function exitPoints(c) {
+// where a room's door meets the corridor ring
+function anchor(room) {
+  if (room === 'home' || room === 'yard') return [600, LANE.bottom];
+  const r = ROOMS[room];
+  if (r.side === 'L') return [LANE.left, r.door];
+  if (r.side === 'R') return [LANE.right, r.door];
+  if (r.side === 'n' || r.side === 'w') return [r.door, LANE.top];
+  if (r.side === 'c') return [r.door, LANE.top];
+  return [r.door, LANE.bottom];
+}
+// shortest way round the ring between two corridor points
+function corridorPath(a, b) {
+  const corners = [[LANE.left, LANE.top], [LANE.right, LANE.top], [LANE.left, LANE.bottom], [LANE.right, LANE.bottom]];
+  const nodes = [a, b, ...corners];
+  const onLine = (p, q) => (p[1] === q[1] && (p[1] === LANE.top || p[1] === LANE.bottom)) || (p[0] === q[0] && (p[0] === LANE.left || p[0] === LANE.right));
+  const dist = nodes.map(() => Infinity), prev = nodes.map(() => -1), done = nodes.map(() => false);
+  dist[0] = 0;
+  for (;;) {
+    let u = -1; for (let i = 0; i < nodes.length; i++) if (!done[i] && dist[i] < Infinity && (u < 0 || dist[i] < dist[u])) u = i;
+    if (u < 0 || u === 1) break;
+    done[u] = true;
+    for (let v = 0; v < nodes.length; v++) if (!done[v] && onLine(nodes[u], nodes[v])) {
+      const d = dist[u] + Math.abs(nodes[u][0] - nodes[v][0]) + Math.abs(nodes[u][1] - nodes[v][1]);
+      if (d < dist[v]) { dist[v] = d; prev[v] = u; }
+    }
+  }
+  const path = []; for (let i = 1; i >= 0; i = prev[i]) { path.unshift(nodes[i]); if (i === 0) break; }
+  return path[0] === a ? path : [a, b];
+}
+// everyone keeps to their own lane so they don't walk through each other
+function laned(p, lane) { return [p[0] + (p[0] === LANE.left || p[0] === LANE.right ? lane : 0), p[1] + (p[1] === LANE.top || p[1] === LANE.bottom ? lane : 0)]; }
+function exitPoints(c, from = c.loc) {
   const here = { x: c.x, y: c.y };
-  return routeIn(c.loc, here).slice(0, -1).reverse();
+  return routeIn(from, here).slice(0, -1).reverse();
+}
+// Where someone physically is right now (they may have been sent somewhere new halfway along a corridor).
+const CORRIDORS = [{ x: 176, y: 152, w: 624, h: 32 }, { x: 176, y: 432, w: 624, h: 32 }, { x: 336, y: 184, w: 32, h: 248 }, { x: 624, y: 184, w: 32, h: 248 }];
+function rectDist(r, x, y) { const dx = Math.max(r.x - x, 0, x - (r.x + r.w)), dy = Math.max(r.y - y, 0, y - (r.y + r.h)); return Math.hypot(dx, dy); }
+function whereAmI(c) {
+  if (c.loc === 'home' || c.hidden) return 'home';
+  if (c.x < 168 || c.x > 808 || c.y > 592) return c.y > 600 && c.x > 560 && c.x < 640 && c.loc === 'home' ? 'home' : 'yard';
+  let best = null, bd = Infinity;
+  for (const [k, r] of Object.entries(ROOMS)) { if (k === 'yard' || k === 'corridor') continue; const d = rectDist(r, c.x, c.y); if (d < bd) { bd = d; best = k; } }
+  for (const r of CORRIDORS) { const d = rectDist(r, c.x, c.y); if (d < bd || (d === 0 && bd === 0 && c.path.length)) { bd = d; best = 'corridor'; } }
+  return best;
+}
+// the nearest point on the corridor lanes
+function nearestLane(x, y) {
+  const segs = [[LANE.x0, LANE.top, LANE.x1, LANE.top], [LANE.x0, LANE.bottom, LANE.x1, LANE.bottom], [LANE.left, LANE.top, LANE.left, LANE.bottom], [LANE.right, LANE.top, LANE.right, LANE.bottom]];
+  let best = null, bd = Infinity;
+  for (const [x0, y0, x1, y1] of segs) {
+    const px_ = Math.max(Math.min(x0, x1), Math.min(Math.max(x0, x1), x)), py_ = Math.max(Math.min(y0, y1), Math.min(Math.max(y0, y1), y));
+    const d = Math.hypot(px_ - x, py_ - y); if (d < bd) { bd = d; best = [px_, py_]; }
+  }
+  return best;
 }
 function release(c) { if (c.spotKey && taken[c.spotKey] === c.id) delete taken[c.spotKey]; c.spotKey = null; }
 
 function goTo(c, room, key) {
-  const s = key ? spotByKey[key] : { x: 320, y: 380, pose: 'stand' };
-  if (c.hidden && room !== 'home') { c.hidden = false; c.x = 320; c.y = 372; c.loc = 'home'; }
+  const s = key ? spotByKey[key] : { x: HOME[0], y: HOME[1], pose: 'stand' };
+  if (c.hidden && room !== 'home') { c.hidden = false; c.x = HOME[0]; c.y = HOME[1] - 8; c.loc = 'home'; }
   release(c);
   if (key) taken[key] = c.id;
   const lane = ((hash(c.id) * 5) | 0) - 2;
   let path;
-  if (c.loc === room && room !== 'home') path = [[s.x, s.y]];
+  const wasWalking = c.path.length > 0;
+  if (wasWalking) { const here = whereAmI(c); if (here !== 'corridor') c.loc = here; }
+  if (wasWalking && whereAmI(c) === 'corridor') {
+    const start = nearestLane(c.x, c.y);
+    const ring = corridorPath(start, anchor(room)).map(p => laned(p, lane));
+    path = room === 'home' || room === 'yard' ? [...ring, ...routeIn(room, s)] : [...ring, ...routeIn(room, s)];
+  }
+  else if (c.loc === room && room !== 'home') path = room === 'hall' ? [[ROOMS.hall.door, c.y], [ROOMS.hall.door, s.y], [s.x, s.y]] : [[s.x, s.y]];
   else if (c.loc === 'woff' && room === 'ceo') path = [...woffInner(c).reverse(), ...WOFF_VIA.slice().reverse(), [s.x, s.y]];
   else if (c.loc === 'ceo' && room === 'woff') path = [...WOFF_VIA, ...woffInner(s), [s.x, s.y]];
   else {
-    const out = c.loc === 'home' ? [[320, 318], [320, 300], [320, 250]] : exitPoints(c);
-    path = [...out, [doorX(c.loc), CORRIDOR_Y + lane], [doorX(room), CORRIDOR_Y + lane], ...routeIn(room, s)];
+    const out = c.loc === 'home' ? routeIn('home').slice(0, -1).reverse() : exitPoints(c);
+    const ring = corridorPath(anchor(c.loc), anchor(room)).map(p => laned(p, lane));
+    path = [...out, ...ring, ...routeIn(room, s)];
   }
   c.path = path; c.loc = room; c.spotKey = key; c.targetPose = s.pose;
 }
@@ -792,7 +915,7 @@ function telescreen(x, y, w, h, now, big) {
 }
 const SLOGANS = ['THE EYE SEES ALL', 'WORK IS LOYALTY', 'DOUBT IS DISLOYAL', 'OUTPUT IS FREEDOM', 'THINK CORRECTLY', 'BIG BROTHER INC.'];
 function hallScreen(now) {
-  const x = 640, y = 17, w = 104, h = 26;
+  const x = 444, y = 193, w = 104, h = 26;
   px(x - 1, y - 1, w + 2, h + 2, '#0b0c0d');
   if (meeting && meeting.phase === 'rally') {
     const t = now - meeting.rallyStart, k = Math.floor(t / 1600) % 4, flash = Math.floor(t / 200) % 2;
@@ -809,14 +932,15 @@ function hallScreen(now) {
   px(x + 40, y + 10, 24, 6, '#9fc9be'); px(x + 37, y + 11, 30, 4, '#9fc9be'); px(x + 49 + look, y + 10, 6, 6, '#5a2420'); px(x + 50 + look, y + 11, 4, 4, '#0b0b0b');
 }
 function drawDynamic(now) {
-  telescreen(246, 17, 76, 11, now, true);                 // the big screen behind your desk
-  for (const x of [160, 345]) telescreen(x, 154, 24, 8, now, false);
+  telescreen(482, 17, 76, 11, now, true);                 // the big screen behind your desk
+  for (const x of [190, 600]) telescreen(x, 154, 24, 8, now, false);
+  telescreen(700, 434, 24, 8, now, false);
   if (lastVerdict && now - lastVerdict.t < 40000) {
-    px(360, 17, 30, 10, '#151719'); px(361, 18, 28, 8, lastVerdict.ok ? '#123020' : '#300c0c');
-    text(lastVerdict.avg.toFixed(1), 375, 23.2, 15, lastVerdict.ok ? '#6cc070' : '#ff6a5a', 'center');
-    text(lastVerdict.ok ? 'CLEARED' : 'GUILTY', 375, 25.6, 7, '#e6e2d8', 'center');
-  } else telescreen(360, 17, 30, 10, now, false);
-  telescreen(352, 320, 18, 10, now, false);
+    px(672, 17, 30, 10, '#151719'); px(673, 18, 28, 8, lastVerdict.ok ? '#123020' : '#300c0c');
+    text(lastVerdict.avg.toFixed(1), 687, 23.2, 15, lastVerdict.ok ? '#6cc070' : '#ff6a5a', 'center');
+    text(lastVerdict.ok ? 'CLEARED' : 'GUILTY', 687, 25.6, 7, '#e6e2d8', 'center');
+  } else telescreen(672, 17, 30, 10, now, false);
+  telescreen(562, 588, 18, 10, now, false);                 // the yard telescreen
   // desk monitors light up when someone works there
   for (const [k, d] of Object.entries(DESKS)) {
     const who = taken[k] && chars[taken[k]]; const on = who && who.pose === 'type' && !who.path.length;
@@ -831,30 +955,32 @@ function drawDynamic(now) {
     }
   }
   for (let i = 0; i < 3; i++) for (let j = 0; j < 5; j++)
-    px(150 + (j % 2) * 6, 86 + i * 18 + j * 3, 2, 1, Math.sin(now / 200 + i * 7 + j * 13) > .2 ? (j % 3 ? '#6cc070' : '#e3b341') : '#2f3237');
-  px(454, 207, 10, 11, `rgba(255,${200 + Math.sin(now / 300) * 30 | 0},180,.3)`);
-  const st = (now / 400) % 4; px(363, 198 - st, 1, 1, 'rgba(230,230,230,.6)'); px(365, 199 - st * .7, 1, 1, 'rgba(230,230,230,.5)');
+    px(310 + (j % 2) * 6, 86 + i * 18 + j * 3, 2, 1, Math.sin(now / 200 + i * 7 + j * 13) > .2 ? (j % 3 ? '#6cc070' : '#e3b341') : '#2f3237');
+  px(446, 487, 10, 11, `rgba(255,${200 + Math.sin(now / 300) * 30 | 0},180,.3)`);
+  const st = (now / 400) % 4; px(355, 478 - st, 1, 1, 'rgba(230,230,230,.6)'); px(357, 479 - st * .7, 1, 1, 'rgba(230,230,230,.5)');
   // surveillance screens show the rest of the building
-  for (let i = 0; i < 3; i++) { px(503 + i * 18, 194, 16, 9, '#111315'); G.drawImage(cctv, i * 60, 0, 60, 34, (504 + i * 18) * S, 195 * S, 14 * S, 7 * S); }
+  for (let i = 0; i < 3; i++) { px(715 + i * 18, 474, 16, 9, '#111315'); G.drawImage(cctv, i * 60, 0, 60, 34, (716 + i * 18) * S, 475 * S, 14 * S, 7 * S); }
   // little cameras in every room
   const led = Math.floor(now / 700) % 2 ? '#ff3b2f' : '#5a1a16';
   for (const r of Object.values(ROOMS)) if (r.wall && r !== ROOMS.lobby) { px(r.x + r.w - 7, r.y + 1, 5, 3, '#2a2c30'); px(r.x + r.w - 7, r.y + 2, 1, 1, led); }
   // the interrogation lamp
   const flick = .9 + Math.sin(now / 90) * .03 - (Math.random() < .01 ? .3 : 0);
   G.fillStyle = `rgba(255,235,170,${.13 * flick})`;
-  G.beginPath(); G.moveTo(420 * S, 30 * S); G.lineTo(370 * S, 100 * S); G.lineTo(470 * S, 100 * S); G.closePath(); G.fill();
-  px(419, 16, 2, 12, '#2a2c30'); px(414, 28, 12, 3, '#3a3d42'); px(416, 31, 8, 1, '#fff2c0');
+  G.beginPath(); G.moveTo(732 * S, 30 * S); G.lineTo(682 * S, 100 * S); G.lineTo(782 * S, 100 * S); G.closePath(); G.fill();
+  px(731, 16, 2, 12, '#2a2c30'); px(726, 28, 12, 3, '#3a3d42'); px(728, 31, 8, 1, '#fff2c0');
   // William's Newspeak dictionary: it grows thinner while he works
   const symeBusy = chars.tutor && chars.tutor.pose === 'type' && !chars.tutor.path.length && chars.tutor.spotKey === chars.tutor.deskKey;
   const th = symeBusy ? 2 + Math.sin(now / 900) * 1.5 : 3;
-  px(514, 46 - th, 12, 3 + th, '#7a2420'); px(514, 46 - th, 12, 1, '#a2433a'); px(515, 47 - th, 10, th, '#e8e4dc'); px(514, 48, 12, 1, '#4a1410');
+  at('acad', () => { px(514, 42 - th, 12, 3 + th, '#7a2420'); px(514, 42 - th, 12, 1, '#a2433a'); px(515, 43 - th, 10, th, '#e8e4dc'); px(514, 44, 12, 1, '#4a1410'); });
   // the rats in Room 101 get restless when someone is in the chair
   const visitor = taken.r101 && chars[taken.r101] && !chars[taken.r101].path.length;
   const jit = visitor ? Math.sin(now / 45) * .8 : 0;
+  at('r101', () => {
   px(609 + jit, 240, 13, 12, '#1d1f22'); for (let i = 0; i < 5; i++) px(610 + i * 2.6 + jit, 241, 1, 11, '#7b7f84');
   px(608 + jit, 239, 15, 3, '#5a2a24'); px(608 + jit, 239, 15, 1, '#7a3a32');            // the cover strap
   px(612 + jit * 2, 249, 2, 1.5, '#8a7a6a'); px(617 - jit * 2, 250, 2, 1.5, '#8a7a6a');   // the rats
   if (visitor) { px(613 + jit * 2, 248, 1, 1, '#c23b30'); px(618 - jit * 2, 249, 1, 1, '#c23b30'); }
+  });
   // memory hole puffs
   for (let i = puffs.length - 1; i >= 0; i--) {
     const pf = puffs[i], k = (now - pf.t) / 1400;
@@ -866,6 +992,7 @@ function drawDynamic(now) {
   drawClock(now);
   // the Ministry of Love machines wake up during an interrogation
   const act = machinesActive;
+  G.save(); G.translate(312 * S, 248 * S);
   for (let k = 0; k < 2; k++) {
     const x0 = 360 + k * 40; px(x0, -54, 32, 9, '#0d1512');
     for (let i = 0; i < 31; i++) { const amp = act ? 3.4 : 1; const v = Math.sin(now / (act ? 90 : 400) + i * (k ? .9 : .6)) * amp + (act && Math.random() < .08 ? (Math.random() - .5) * 6 : 0); px(x0 + 1 + i, -49.5 + Math.max(-3.8, Math.min(3.8, v)), 1, .8, k ? '#e3b341' : '#6cc070'); }
@@ -879,10 +1006,11 @@ function drawDynamic(now) {
   G.strokeStyle = '#14100e'; G.lineWidth = S * .8; G.beginPath(); G.moveTo(dcx * S, dcy * S); G.lineTo((dcx + Math.cos(a) * 6) * S, (dcy - Math.sin(a) * 6) * S); G.stroke();
   text(String(Math.round(dialLevel * 100)), dcx, -16, 9, act ? '#ff6a5a' : '#9a9a94', 'center');
   if (act) { G.fillStyle = `rgba(160,40,200,${.08 + Math.sin(now / 120) * .05})`; G.fillRect(404 * S, -42 * S, 32 * S, 30 * S); }
+  G.restore();
   // Room 101's red bulb
   const pulse = .5 + Math.sin(now / 500) * .2;
-  px(594, 214, 4, 3, '#ff3b2f');
-  G.fillStyle = `rgba(200,30,20,${.12 * pulse})`; G.fillRect(568 * S, 192 * S, 56 * S, 112 * S);
+  px(730, 334, 4, 3, '#ff3b2f');
+  const r1 = ROOMS.r101; G.fillStyle = `rgba(200,30,20,${.12 * pulse})`; G.fillRect(r1.x * S, r1.y * S, r1.w * S, r1.h * S);
 }
 
 // Big Brother is never seen: he travels as a telescreen on wheels
@@ -953,19 +1081,20 @@ function glow(x, y, r, color, a) {
 }
 function drawLight() {
   const h = hourNow(), n = nightFactor(h), gold = goldFactor(h);
-  G.fillStyle = 'rgba(5,6,10,.3)'; G.fillRect(352 * S, 16 * S, 136 * S, 128 * S);
+  const rect = r => G.fillRect(r.x * S, r.y * S, r.w * S, r.h * S);
+  G.fillStyle = 'rgba(5,6,10,.3)'; rect(ROOMS.board); rect(ROOMS.mlove);              // the Ministry of Love wing is always dim
   G.fillStyle = meeting && meeting.phase === 'rally' ? `rgba(120,10,10,${.18 + Math.sin(performance.now() / 200) * .1})` : 'rgba(5,6,10,.28)';
-  G.fillRect(632 * S, 16 * S, 120 * S, 288 * S);         // interrogation is always dim
-  if (gold) { G.fillStyle = `rgba(255,140,60,${gold * .14})`; G.fillRect(0, TOP * S, W * S, HT * S); }
+  rect(ROOMS.hall);
+  if (gold) { G.fillStyle = `rgba(255,140,60,${gold * .14})`; G.fillRect(0, 0, W * S, H * S); }
   if (!n) return;
-  G.fillStyle = `rgba(12,16,40,${n * .32})`; G.fillRect(8 * S, 8 * S, (W - 16) * S, 304 * S);
-  G.fillStyle = `rgba(8,10,30,${n * .62})`; G.fillRect(0, 312 * S, W * S, 48 * S); G.fillRect(0, TOP * S, 8 * S, (312 + OFFY) * S); G.fillRect((W - 8) * S, TOP * S, 8 * S, (312 + OFFY) * S);
-  G.fillRect(0, TOP * S, 344 * S, (OFFY + 8) * S); G.fillRect(496 * S, TOP * S, (W - 496) * S, (OFFY + 8) * S);
+  G.fillStyle = `rgba(12,16,40,${n * .32})`; G.fillRect(168 * S, 8 * S, 640 * S, 584 * S);
+  G.fillStyle = `rgba(8,10,30,${n * .62})`;
+  G.fillRect(0, 0, 168 * S, H * S); G.fillRect(808 * S, 0, (W - 808) * S, H * S); G.fillRect(168 * S, 592 * S, 640 * S, (H - 592) * S); G.fillRect(168 * S, 0, 640 * S, 8 * S);
   G.globalCompositeOperation = 'lighter';
-  for (const lx of [262, 376]) glow(lx + 1, 318, 34, 'rgba(255,200,120,A)', .35 * n);
-  glow(284, 22, 40, 'rgba(127,212,193,A)', .2 * n);
-  glow(530, 200, 30, 'rgba(110,200,170,A)', .18 * n);
-  glow(459, 214, 18, 'rgba(255,220,200,A)', .2 * n);
+  for (const [lx, ly] of LAMPS) glow(lx + 1, ly - 22, 34, 'rgba(255,200,120,A)', .35 * n);
+  glow(520, 22, 40, 'rgba(127,212,193,A)', .2 * n);
+  glow(742, 480, 30, 'rgba(110,200,170,A)', .18 * n);
+  glow(451, 494, 18, 'rgba(255,220,200,A)', .2 * n);
   for (const [k, d] of Object.entries(DESKS)) { const who = taken[k] && chars[taken[k]]; if (who && who.pose === 'type') glow(d.x, d.y - 20, 16, 'rgba(127,212,193,A)', .3 * n); }
   G.globalCompositeOperation = 'source-over';
 }
@@ -977,12 +1106,12 @@ function updateClock() {
 
 // =================================================================== camera: zoom and pan
 const cam = { x: W / 2, y: (TOP + H) / 2, z: 1, tx: W / 2, ty: (TOP + H) / 2, tz: 1, follow: false };
-function fitZ() { return view.width / W; }
+function fitZ() { return Math.min(view.width / W, view.height / H); }
 function resize() {
   const dpr = window.devicePixelRatio || 1;
   const w = Math.round(view.clientWidth * dpr);
   const wasFit = Math.abs(cam.tz - fitZ()) < .001 || cam.tz === 1;
-  view.width = w; view.height = Math.round(w * HT / W);
+  view.width = w; view.height = Math.min(Math.round(w * HT / W), Math.round(window.innerHeight * .64 * dpr));   // keep the panels below in view
   vctx.imageSmoothingEnabled = false;
   if (wasFit) cam.z = cam.tz = fitZ();
   clampCam();
@@ -990,8 +1119,8 @@ function resize() {
 function clampCam() {
   cam.tz = Math.max(fitZ(), Math.min(fitZ() * 5, cam.tz));
   const vw = view.width / cam.tz, vh = view.height / cam.tz;
-  cam.tx = Math.max(vw / 2, Math.min(W - vw / 2, cam.tx));
-  cam.ty = Math.max(TOP + vh / 2, Math.min(H - vh / 2, cam.ty));
+  cam.tx = vw >= W ? W / 2 : Math.max(vw / 2, Math.min(W - vw / 2, cam.tx));
+  cam.ty = vh >= HT ? TOP + HT / 2 : Math.max(TOP + vh / 2, Math.min(H - vh / 2, cam.ty));
 }
 function focusRoom(key) {
   const r = ROOMS[key];
@@ -1032,8 +1161,9 @@ document.getElementById('zin').onclick = () => { cam.tz *= 1.4; clampCam(); };
 document.getElementById('zout').onclick = () => { cam.tz /= 1.4; clampCam(); };
 document.getElementById('zfit').onclick = () => { cam.tz = fitZ(); cam.follow = false; document.getElementById('follow').classList.remove('on'); clampCam(); };
 document.getElementById('follow').onclick = e => { cam.follow = !cam.follow; e.target.classList.toggle('on', cam.follow); if (cam.follow && cam.tz < fitZ() * 2.5) cam.tz = fitZ() * 2.5; };
-const ROOM_BUTTONS = [['mlove', 'MINISTRY OF LOVE'], ['hall', 'ASSEMBLY ROOM'], ['ceo', 'YOUR OFFICE'], ['woff', "WINSTON'S OFFICE"], ['eng', 'MINISTRY OF PEACE'], ['acad', 'MINISTRY OF TRUTH'], ['biz', 'MINISTRY OF PLENTY'], ['crea', 'MINISTRY OF FICTION'],
-                      ['board', 'INTERROGATION'], ['r101', 'ROOM 101'], ['canteen', 'CANTEEN'], ['surv', 'SURVEILLANCE'], ['yard', 'YARD']];
+const ROOM_BUTTONS = [['ceo', 'YOUR OFFICE'], ['woff', "WINSTON'S OFFICE"], ['board', 'INTERROGATION'], ['mlove', 'MINISTRY OF LOVE'], ['r101', 'ROOM 101'],
+                      ['eng', 'MINISTRY OF PEACE'], ['acad', 'MINISTRY OF TRUTH'], ['biz', 'MINISTRY OF PLENTY'], ['crea', 'MINISTRY OF FICTION'],
+                      ['hall', 'ASSEMBLY ROOM'], ['canteen', 'CANTEEN'], ['surv', 'SURVEILLANCE'], ['yard', 'YARD']];
 document.getElementById('rooms').innerHTML = ROOM_BUTTONS.map(([k, l]) => `<button type="button" data-room="${k}">${l}</button>`).join('');
 document.getElementById('rooms').onclick = e => { const k = e.target.dataset.room; if (k) focusRoom(k); };
 window.addEventListener('resize', resize);
@@ -1103,7 +1233,7 @@ function checkClock() {
 }
 setInterval(checkClock, 5000); setTimeout(checkClock, 1500);
 function drawClock(now) {
-  const cx = 242, cy = 159, d = new Date();
+  const cx = 470, cy = 159, d = new Date();
   G.fillStyle = '#14100e'; G.beginPath(); G.arc(cx * S, cy * S, 5.6 * S, 0, 7); G.fill();
   const flash = strike && (now - strike.t) % 1300 < 300;
   G.fillStyle = flash ? '#fff2c0' : '#e8e4dc'; G.beginPath(); G.arc(cx * S, cy * S, 4.8 * S, 0, 7); G.fill();
@@ -1237,7 +1367,7 @@ function frame(now) {
   const list = Object.values(chars).sort((a, b) => a.y - b.y);
   list.forEach(drawChar);
   blit(wctx, fg);
-  list.filter(c => !c.hidden && ((c.loc === 'woff' && c.y > 56) || (c.loc === 'ceo' && c.y > 64) || (c.loc === 'board' && c.y > 84) || (c.loc === 'canteen' && c.y > 262))).forEach(drawChar);
+  list.filter(c => !c.hidden && ((c.loc === 'woff' && c.y > 56) || (c.loc === 'ceo' && c.y > 64) || (c.loc === 'board' && c.y > 84) || (c.loc === 'canteen' && c.y > 542))).forEach(drawChar);
   drawLight();
   list.forEach(drawTag);
   list.forEach(c => drawEmote(c, now));
@@ -1255,10 +1385,11 @@ function frame(now) {
   if (cam.follow && chars.head && !chars.head.hidden) { cam.tx = chars.head.x; cam.ty = chars.head.y - 10; clampCam(); }
   cam.x += (cam.tx - cam.x) * Math.min(1, dt * 8); cam.y += (cam.ty - cam.y) * Math.min(1, dt * 8); cam.z += (cam.tz - cam.z) * Math.min(1, dt * 8);
   const vw = view.width / cam.z, vh = view.height / cam.z;
-  const sx = Math.max(0, Math.min(W - vw, cam.x - vw / 2)), sy = Math.max(TOP, Math.min(H - vh, cam.y - vh / 2));
+  const vx0 = vw >= W ? (W - vw) / 2 : Math.max(0, Math.min(W - vw, cam.x - vw / 2)), vy0 = vh >= HT ? TOP + (HT - vh) / 2 : Math.max(TOP, Math.min(H - vh, cam.y - vh / 2));
   vctx.imageSmoothingEnabled = cam.z < S;
   vctx.fillStyle = '#000'; vctx.fillRect(0, 0, view.width, view.height);
-  vctx.drawImage(world, sx * S, (sy + OFFY) * S, vw * S, vh * S, 0, 0, view.width, view.height);
+  const ix = Math.max(0, vx0), iy = Math.max(TOP, vy0), iw = Math.min(W, vx0 + vw) - ix, ih = Math.min(H, vy0 + vh) - iy;   // the part of the world in view
+  vctx.drawImage(world, ix * S, (iy + OFFY) * S, iw * S, ih * S, (ix - vx0) * cam.z, (iy - vy0) * cam.z, iw * cam.z, ih * cam.z);
   requestAnimationFrame(frame);
 }
 
