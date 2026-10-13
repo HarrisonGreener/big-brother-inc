@@ -300,7 +300,7 @@ const ROOMS = {
   crea:    { x: 176, y: 472, w: 152, h: 112, door: 252, side: 'B', name: 'MINISTRY OF FICTION',  dept: 'Ministry of Fiction', color: '#6e5038', wall: '#5e4632', floor: ['#8a7a64', '#84745e'] },
   canteen: { x: 336, y: 472, w: 200, h: 112, door: 400, side: 'B', name: 'CANTEEN',                                    wall: '#6d6b62', floor: ['#8c8a80', '#848278'] },
   lobby:   { x: 544, y: 472, w: 112, h: 112, door: 600, side: 'B', name: 'LOBBY',                                      wall: '#d6d0c2', floor: ['#bdb8ad', '#b3aea3'] },
-  surv:    { x: 664, y: 472, w: 232, h: 112, door: 780, side: 'B', name: 'SURVEILLANCE',                               wall: '#2c3036', floor: ['#3e4247', '#3a3e43'] },
+  surv:    { x: 664, y: 472, w: 232, h: 112, door: 860, side: 'B', name: 'SURVEILLANCE',                               wall: '#2c3036', floor: ['#3e4247', '#3a3e43'] },
   records: { x: -56, y: 16,  w: 224, h: 568, door: 168, side: 'E', name: 'RECORDS DEPARTMENT',                         wall: '#3a3f3a', floor: ['#4d4f4a', '#494b46'] },
   cells:   { x: 904, y: 192, w: 128, h: 232, door: 248, side: 'X', name: 'CELLS',                                      wall: '#d8d8d2', floor: ['#c9c9c2', '#c2c2bb'] },
   wc:      { x: 904, y: 16,  w: 128, h: 128, door: 968, side: 'n', name: 'TOILETS',                                    wall: '#b9c4c2', floor: ['#d6dcd9', '#cfd5d2'] },
@@ -343,9 +343,9 @@ function deskSpot(room, key, x, y) {
 deskSpot('eng', 'eng-d0', 44, 64); deskSpot('eng', 'eng-d1', 92, 64); deskSpot('eng', 'eng-d2', 140, 64);
 deskSpot('eng', 'eng-d3', 44, 108); deskSpot('eng', 'eng-d4', 124, 108);
 deskSpot('acad', 'acad-d2', 524, 102); deskSpot('acad', 'acad-d3', 596, 102);
-deskSpot('biz', 'biz-d2', 40, 292); deskSpot('biz', 'biz-d3', 108, 292);
+deskSpot('biz', 'biz-d2', 40, 280); deskSpot('biz', 'biz-d3', 108, 280);
 deskSpot('acad', 'acad-d0', 530, 62); deskSpot('acad', 'acad-d1', 588, 62);
-deskSpot('biz', 'biz-d0', 40, 250); deskSpot('biz', 'biz-d1', 108, 250);
+deskSpot('biz', 'biz-d0', 40, 240); deskSpot('biz', 'biz-d1', 108, 240);
 deskSpot('crea', 'crea-d0', 172, 250); deskSpot('crea', 'crea-d1', 264, 250);
 // relaxing spots
 spot('eng', 'eng-i1', 84, 104, 'stand', 'idle'); spot('eng', 'eng-i2', 136, 136, 'back', 'idle');
@@ -383,6 +383,10 @@ for (const [k, x] of [['wc-1', 924], ['wc-2', 956], ['wc-3', 988]]) spot('wc', k
 spot('wc', 'wc-sink', 1012, 110, 'back', 'loo');
 DESKS.janitor = { room: 'closet', x: 940, y: 540, ox: 940, oy: 540 }; spot('closet', 'janitor', 940, 540, 'sit', 'desk');
 spot('closet', 'closet-i', 990, 548, 'stand', 'idle');
+// places the wandering extras head for (they spend most of their time in the corridors getting there)
+for (const [room, x, y] of [['lobby', 566, 560], ['lobby', 636, 520], ['canteen', 520, 568], ['records', 56, 300], ['records', 56, 470], ['wc', 1012, 126],
+                            ['hall', 496, 404], ['yard', 520, 636], ['yard', 300, 632], ['surv', 840, 560], ['eng', 280, 100], ['crea', 300, 520], ['acad', 316, 260]])
+  spot(room, `walk-${room}-${x}-${y}`, x, y, 'stand', 'walk', true);
 const spotByKey = Object.fromEntries(SPOTS.map(s => [s.key, s]));
 const taken = {};
 
@@ -528,7 +532,7 @@ function drawStatic() {
   wallH(168, 1040, 424, [[336, 368], [488, 504], [624, 656]]);
   wallV(328, 184, 432, [[240, 256], [360, 376]]); wallV(368, 184, 432); wallV(616, 184, 432); wallV(656, 184, 432, [[240, 256], [360, 376]]);
   WB(168, 304, 168, 8); WB(656, 304, 248, 8);
-  wallH(168, 1040, 464, [[244, 260], [392, 408], [544, 656], [772, 788], [960, 976]]);     // south wing (the lobby is open)
+  wallH(168, 1040, 464, [[244, 260], [392, 408], [544, 656], [852, 868], [960, 976]]);     // south wing (the lobby is open)
   WB(328, 464, 8, 128); WB(536, 464, 8, 128); WB(656, 464, 8, 128);
   // side doors: dark gaps in the walls
   for (const r of [ROOMS.acad, ROOMS.biz]) { px(328, r.door - 8, 8, 16, '#2a2d30'); px(334, r.door - 8, 2, 16, '#5d6266'); }
@@ -593,7 +597,7 @@ function drawStatic() {
   at('biz', () => {
     px(22, 193, 42, 10, '#dedbd2'); for (let i = 0; i < 5; i++) px(26 + i * 7, 201 - i * 1.6, 4, 1 + i * 1.6, ['#c23b30', '#e3b341', '#6cc070', '#3d5872', '#6cc070'][i]);
     poster(96, 193, 'PLENTY', 'FOR ALL');
-    for (const k of ['biz-d0', 'biz-d1']) { const d = od(k); desk(d.x - 16, 222, 32, 14, '#7b7e83'); chairTop(d.x, d.y + 3); px(d.x + 9, 225, 5, 4, '#d9d2bf'); }
+    for (const k of ['biz-d0', 'biz-d1']) { const d = od(k); desk(d.x - 16, d.y - 28, 32, 14, '#7b7e83'); chairTop(d.x, d.y + 3); px(d.x + 9, d.y - 25, 5, 4, '#d9d2bf'); }
   });
   // ---------------- Ministry of Fiction
   at('crea', () => {
@@ -711,7 +715,7 @@ function drawStatic() {
     const size = r.w < 60 ? 11 : 16;
     G.font = `${fs(size)}px VT323, monospace`;
     const w = G.measureText(r.name).width / S + 6;
-    const ly = r.side === 'n' || r.side === 'w' ? r.y + r.h - 12 : r.y + r.h - 10;
+    const ly = r.side === 'n' || r.side === 'w' ? r.y + r.h - 12 : r.y + r.h - 9;
     px(r.x + 3, ly, w, 7, 'rgba(16,17,19,.65)');
     text(r.name, r.x + 6, ly + 5.3, size, '#d9d4c7');
   }
@@ -2032,6 +2036,29 @@ async function start() {
     c.extra = true; c.deskKey = desk; used.add(desk);
     if (workHours(c)) { place(c, DESKS[desk].room, desk); c.nextAt = performance.now() + 10000 + Math.random() * 40000; }
   });
+  // extras who walk the building: a Thought Police patrol, a messenger, a Junior Spy and a couple of clerks
+  const WALKERS = [['patrol1', 'Patrol', 'police', '#1b1d21'], ['patrol2', 'Patrol', 'police', '#1b1d21'], ['messenger', 'Messenger', 'overalls', '#3b4a6b'],
+                   ['spy', 'Junior Spy', 'spy', '#3b4a6b'], ['walker1', 'Party member', 'overalls', '#3b4a6b'], ['walker2', 'Party member', 'overalls', '#4a3b5e']];
+  WALKERS.forEach(([id, name, kind, clothes], i) => {
+    LOOKS[id] = kind === 'police' ? { hair: '#2b1d14', skin: SKIN[i % SKIN.length], clothes: '#1b1d21', pants: '#121316', outfit: 'police', style: 'police' }
+      : kind === 'spy' ? { hair: '#c9a66b', skin: '#f3d2b3', clothes: '#3b4a6b', tie: '#c23b30', pants: '#2f3a52', outfit: 'suit', style: 'short' }   // red scarf
+      : { hair: HAIR[(i * 2) % HAIR.length], skin: SKIN[(i * 5) % SKIN.length], clothes, tie: '#2f3a52', pants: '#2f3a52', outfit: 'overalls', style: i % 2 ? 'long' : 'short' };
+    const c = makeChar({ id, name, role: kind === 'police' ? 'Thought Police' : name, color: kind === 'police' ? '#c9a0a0' : '#9aa6bd' }, true);
+    c.extra = true; c.walker = true; c.nightShift = kind === 'police';
+    const s = pick(freeSpots(x => x.use === 'walk'));
+    if (s && (c.nightShift || workHours(c))) place(c, s.room, s.key);
+    c.nextWalk = performance.now() + 2000 + Math.random() * 8000;
+  });
+  setInterval(() => {
+    const now = performance.now();
+    for (const c of Object.values(chars)) {
+      if (!c.walker || c.meeting || c.engaged || c.path.length || now < c.nextWalk) continue;
+      c.nextWalk = now + 3000 + Math.random() * 9000;
+      if (!c.nightShift && !workHours(c)) { if (c.loc !== 'home') goTo(c, 'home', null); continue; }
+      const s = pick(freeSpots(x => x.use === 'walk' && x.room !== c.loc));
+      if (s) goTo(c, s.room, s.key);
+    }
+  }, 1000);
   talkSel.innerHTML = state.housemates.map(h => `<option value="${h.id}">${esc(h.name)}, ${esc(h.role)}</option>`).join('');
   talkSel.value = 'head';
   const groups = [['CHIEF OF STAFF', state.housemates.filter(h => h.id === 'head')],
