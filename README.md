@@ -6,7 +6,7 @@ You play Big Brother. Beneath you is a small company of AI "staff", each one a l
 your own computer through [Ollama](https://ollama.com). You give an order; you watch the building carry it out.
 Every message is relayed, every draft is inspected, and nothing reaches you without passing the Thought Police.
 
-**[Explore the live demo](https://harrygreener01-cloud.github.io/big-brother-inc/)**
+**[Explore the live demo](https://harrisongreener.github.io/big-brother-inc/)**
 
 ![The Big Brother Inc. building](docs/building.png)
 
